@@ -1,0 +1,50 @@
+// Tests de US-01-1: la app levanta, responde /health y sirve la página con marca TaskFlow.
+const { test, before, after } = require('node:test');
+const assert = require('node:assert');
+
+let server;
+let base;
+
+before(async () => {
+  const { createServer } = require('../server');
+  server = createServer();
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  base = `http://127.0.0.1:${server.address().port}`;
+});
+
+after(() => server && server.close());
+
+test('GET /health responde 200 con {"status":"ok"}', async () => {
+  const res = await fetch(`${base}/health`);
+  assert.strictEqual(res.status, 200);
+  assert.deepStrictEqual(await res.json(), { status: 'ok' });
+});
+
+test('GET / sirve la página con el nombre TaskFlow', async () => {
+  const res = await fetch(`${base}/`);
+  assert.strictEqual(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/html/);
+  const html = await res.text();
+  assert.match(html, /<title>TaskFlow<\/title>/);
+  assert.match(html, /data-testid="app-name"[^>]*>TaskFlow</);
+});
+
+test('la página es responsive (meta viewport)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1"/);
+});
+
+test('la página define y usa las variables CSS de la marca', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /--color-primary:\s*#4F46E5/i);
+  assert.match(html, /--color-bg:\s*#F5F6F8/i);
+  assert.match(html, /--color-text:\s*#111827/i);
+  assert.match(html, /background:\s*var\(--color-bg\)/);
+  assert.match(html, /color:\s*var\(--color-text\)/);
+  assert.match(html, /background:\s*var\(--color-primary\)/);
+});
+
+test('rutas desconocidas devuelven 404', async () => {
+  const res = await fetch(`${base}/no-existe`);
+  assert.strictEqual(res.status, 404);
+});

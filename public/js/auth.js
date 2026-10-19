@@ -8,10 +8,21 @@
   var MESSAGES = {
     empty: 'Ingresa tu correo y tu contraseña',
     invalid: 'Correo o contraseña incorrectos',
+    registerEmpty: 'Completa todos los campos',
+    invalidEmail: 'Ingresa un correo válido',
+    exists: 'Ya existe una cuenta con ese correo',
+    mismatch: 'Las contraseñas no coinciden',
   };
+
+  // Formato básico: algo@dominio.tld, sin espacios.
+  var EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function normalizeEmail(email) {
     return String(email || '').trim().toLowerCase();
+  }
+
+  function fail(error, field) {
+    return { ok: false, error: error, field: field };
   }
 
   function createAuth() {
@@ -34,6 +45,18 @@
         if (!account || account.password !== password) return { ok: false, error: MESSAGES.invalid };
         session = account.email;
         return { ok: true, email: account.email };
+      },
+      register: function (email, password, confirm) {
+        var key = normalizeEmail(email);
+        if (!key) return fail(MESSAGES.registerEmpty, 'email');
+        if (!password) return fail(MESSAGES.registerEmpty, 'password');
+        if (!confirm) return fail(MESSAGES.registerEmpty, 'confirm');
+        if (!EMAIL_PATTERN.test(key)) return fail(MESSAGES.invalidEmail, 'email');
+        if (findAccount(key)) return fail(MESSAGES.exists, 'email');
+        if (password !== confirm) return fail(MESSAGES.mismatch, 'confirm');
+        accounts.push({ email: key, password: password });
+        session = key;
+        return { ok: true, email: key };
       },
       logout: function () {
         session = null;

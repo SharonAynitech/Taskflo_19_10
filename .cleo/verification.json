@@ -62,6 +62,49 @@
           ]
         }
       ]
+    },
+    "US-02-2": {
+      "criteria_digest": "f1ba5fa30e883695d27842655e84b4f428333b117278a25c9addf58dc9c97edf",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "click", "selector": "#show-register" },
+            { "action": "visible", "selector": "[data-testid=register-form]" },
+            { "action": "fill", "selector": "#register-form input[name=email]", "value": "nueva@correo.pe" },
+            { "action": "fill", "selector": "#register-form input[name=password]", "value": "Clave123" },
+            { "action": "fill", "selector": "#register-form input[name=confirm]", "value": "Clave123" },
+            { "action": "click", "selector": "#register-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=register-form]" },
+            { "action": "visible", "selector": "[data-testid=session-success]" },
+            { "action": "text", "selector": "[data-testid=user-email]", "value": "nueva@correo.pe" },
+            { "action": "text", "selector": "[data-testid=session-success]", "value": "Cuenta creada" }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "click", "selector": "#show-register" },
+            { "action": "fill", "selector": "#register-form input[name=email]", "value": "correo-invalido" },
+            { "action": "fill", "selector": "#register-form input[name=password]", "value": "Clave123" },
+            { "action": "fill", "selector": "#register-form input[name=confirm]", "value": "Clave123" },
+            { "action": "click", "selector": "#register-form button[type=submit]" },
+            { "action": "text", "selector": "[data-testid=register-error]", "value": "Ingresa un correo válido" },
+            { "action": "fill", "selector": "#register-form input[name=email]", "value": "nueva@correo.pe" },
+            { "action": "fill", "selector": "#register-form input[name=confirm]", "value": "Clave999" },
+            { "action": "click", "selector": "#register-form button[type=submit]" },
+            { "action": "text", "selector": "[data-testid=register-error]", "value": "Las contraseñas no coinciden" },
+            { "action": "fill", "selector": "#register-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#register-form input[name=confirm]", "value": "Clave123" },
+            { "action": "click", "selector": "#register-form button[type=submit]" },
+            { "action": "text", "selector": "[data-testid=register-error]", "value": "Ya existe una cuenta con ese correo" },
+            { "action": "hidden", "selector": "[data-testid=app-view]" },
+            { "action": "visible", "selector": "[data-testid=register-form]" }
+          ]
+        }
+      ]
     }
   }
 }

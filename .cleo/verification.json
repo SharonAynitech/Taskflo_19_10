@@ -105,6 +105,46 @@
           ]
         }
       ]
+    },
+    "US-03-1": {
+      "criteria_digest": "d553b3391d27f67c973f85268004626b8cf955d277dd8883aa0952fa25c06938",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "visible", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=task-form]" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 0 },
+            { "action": "text", "selector": "[data-testid=task-title-error]", "value": "El título es obligatorio." }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Preparar informe mensual" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "alta" },
+            { "action": "fill", "selector": "#task-form input[name=due]", "value": "2026-10-25" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "count", "selector": "[data-column=todo] [data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-column=todo] [data-testid=task-card]", "value": "Preparar informe mensual" },
+            { "action": "text", "selector": "[data-column=todo] [data-testid=task-priority]", "value": "Alta" },
+            { "action": "text", "selector": "[data-column=todo] [data-testid=task-due]", "value": "25 oct 2026" }
+          ]
+        }
+      ]
     }
   }
 }

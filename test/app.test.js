@@ -60,6 +60,23 @@ test('GET / incluye el formulario de registro (US-02-2)', async () => {
   assert.match(html, /id="show-login"/);
 });
 
+test('GET / incluye el tablero y el modal de nueva tarea (US-03-1)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<script src="\/js\/tasks\.js"><\/script>/);
+  assert.match(html, /<dialog[^>]*id="task-dialog"/);
+  assert.match(html, /<form[^>]*id="task-form"[^>]*novalidate/);
+  for (const status of ['todo', 'doing', 'done']) assert.match(html, new RegExp(`data-column="${status}"`));
+  assert.match(html, />Por hacer</);
+  assert.match(html, />En progreso</);
+  assert.match(html, />Hecho</);
+});
+
+test('GET /js/tasks.js se sirve como JavaScript', async () => {
+  const res = await fetch(`${base}/js/tasks.js`);
+  assert.strictEqual(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/javascript/);
+});
+
 test('GET /js/auth.js se sirve como JavaScript', async () => {
   const res = await fetch(`${base}/js/auth.js`);
   assert.strictEqual(res.status, 200);

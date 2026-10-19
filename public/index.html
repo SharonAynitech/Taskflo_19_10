@@ -174,7 +174,6 @@
     }
     .step-list strong { display: block; font-weight: 600; }
     .step-list span.desc { display: block; font-size: 14px; color: var(--color-text-sub); }
-    .session-note { margin: 16px 0 0; font-size: 13px; color: var(--color-text-sub); }
 
     /* ---------- Vista con sesión iniciada ---------- */
     .topbar {
@@ -191,16 +190,88 @@
       font-weight: 700; font-size: 14px;
     }
     .user-email { font-size: 14px; font-weight: 500; color: var(--color-text-sub); min-width: 0; }
-
-    .app-main { display: flex; justify-content: center; padding: 48px 16px; }
-    .success-card { max-width: 520px; text-align: center; }
-    .success-icon {
-      display: inline-grid; place-items: center;
-      width: 48px; height: 48px; margin-bottom: 16px;
-      border-radius: 50%; background: #DCFCE7; color: #166534;
+    .session-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 2px 10px; border-radius: 999px;
+      background: #DCFCE7; color: #166534;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
     }
-    .success-card .subtitle { margin-bottom: 0; }
-    .success-card strong { color: var(--color-text); }
+    .session-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; }
+    .btn-primary.btn-inline { width: auto; }
+
+    /* ---------- Tablero ---------- */
+    .board-main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .board-head { margin-bottom: 20px; }
+    .board-head h1 { margin: 0 0 4px; font-size: 24px; font-weight: 700; line-height: 1.25; }
+    .board-head p { margin: 0; color: var(--color-text-sub); }
+
+    .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+    .column {
+      display: flex; flex-direction: column; gap: 12px; min-height: 200px;
+      padding: 12px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+    }
+    .column-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 4px 0; }
+    .column-head h2 { margin: 0; font-size: 15px; font-weight: 700; }
+    .count {
+      min-width: 24px; padding: 0 8px; border-radius: 999px;
+      background: var(--color-surface); border: 1px solid var(--border-color);
+      font-size: 12px; font-weight: 600; text-align: center; color: var(--color-text-sub);
+    }
+    .card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .empty-col {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 24px 8px; color: var(--color-text-sub); font-size: 14px; text-align: center;
+    }
+
+    .task-card {
+      padding: 12px;
+      background: var(--color-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-fast);
+    }
+    .task-card:hover { border-color: #C7D2FE; }
+    .task-card.is-new { border-color: var(--color-primary); }
+    .task-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--color-text); }
+    .task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--color-text-sub); }
+    .badge { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge-alta { background: #FEE2E2; color: #991B1B; }
+    .badge-media { background: #FEF3C7; color: #92400E; }
+    .badge-baja { background: #DCFCE7; color: #166534; }
+    .due { display: inline-flex; align-items: center; gap: 4px; }
+
+    /* ---------- Modal de tarea ---------- */
+    .modal {
+      width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+      padding: 0; border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+      background: var(--color-surface); color: var(--color-text);
+      box-shadow: var(--shadow-md);
+    }
+    .modal::backdrop { background: rgba(17, 24, 39, 0.45); }
+    .modal-body { padding: 24px; }
+    .modal h2 { margin: 0 0 4px; font-size: 20px; font-weight: 700; }
+    .modal .subtitle { margin: 0 0 20px; color: var(--color-text-sub); }
+    .field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+    .field select {
+      height: var(--control-height); width: 100%; padding: 0 8px;
+      font: inherit; color: var(--color-text);
+      background: var(--color-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+    }
+    .field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .req { color: var(--color-destructive); }
+    .optional { font-weight: 400; color: var(--color-text-sub); }
+    .field-error { margin: 0; font-size: 13px; font-weight: 500; color: var(--color-error-text); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+    .modal-actions .btn-primary { width: auto; }
+
+    @media (max-width: 860px) {
+      .board { grid-template-columns: minmax(0, 1fr); }
+      .column { min-height: 0; }
+    }
 
     @media (max-width: 860px) {
       .auth-view { grid-template-columns: minmax(0, 1fr); }
@@ -211,7 +282,10 @@
     @media (max-width: 480px) {
       .card { padding: 24px 16px; }
       .topbar { padding: 12px 16px; }
-      .user-email { display: none; }
+      .user-email, .avatar { display: none; }
+      .board-main { padding: 16px; }
+      .field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+      .modal-body { padding: 20px 16px; }
     }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
@@ -327,26 +401,86 @@
         <span class="brand-mark" aria-hidden="true">TF</span>
         <span class="brand-name">TaskFlow</span>
       </span>
-      <div class="user-menu">
-        <span class="avatar" id="user-avatar" aria-hidden="true"></span>
-        <span class="user-email" id="user-email" data-testid="user-email"></span>
-        <button class="btn btn-secondary" type="button" id="logout">Cerrar sesión</button>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-inline" type="button" id="new-task">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva tarea
+        </button>
+        <div class="user-menu">
+          <span class="avatar" id="user-avatar" aria-hidden="true"></span>
+          <span class="user-email" id="user-email" data-testid="user-email"></span>
+          <span class="session-pill" id="session-pill" data-testid="session-success" role="status">Sesión iniciada</span>
+          <button class="btn btn-secondary" type="button" id="logout">Cerrar sesión</button>
+        </div>
       </div>
     </header>
-    <main class="app-main">
-      <section class="card success-card" data-testid="session-success" aria-labelledby="success-title">
-        <span class="success-icon" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-        </span>
-        <h1 id="success-title" tabindex="-1">Sesión iniciada</h1>
-        <p class="subtitle" id="success-text-login">Estás conectado como <strong id="session-email"></strong>. Ya puedes gestionar tus tareas en el tablero.</p>
-        <p class="subtitle" id="success-text-register" hidden>Ya tienes tu identidad en TaskFlow. Estás conectado como <strong id="session-email-new"></strong> y listo para gestionar tus tareas.</p>
-        <p class="session-note">Al salir, la cuenta y las tareas de esta sesión se descartan.</p>
-      </section>
+
+    <main class="board-main">
+      <div class="board-head">
+        <h1 id="board-title" tabindex="-1">Mi tablero</h1>
+        <p>Tus tareas organizadas por estado.</p>
+      </div>
+
+      <div class="board" data-testid="board">
+        <section class="column" data-column="todo" aria-labelledby="col-todo">
+          <div class="column-head"><h2 id="col-todo">Por hacer</h2><span class="count" data-count="todo">0</span></div>
+          <ul class="card-list" data-list="todo"></ul>
+        </section>
+        <section class="column" data-column="doing" aria-labelledby="col-doing">
+          <div class="column-head"><h2 id="col-doing">En progreso</h2><span class="count" data-count="doing">0</span></div>
+          <ul class="card-list" data-list="doing"></ul>
+        </section>
+        <section class="column" data-column="done" aria-labelledby="col-done">
+          <div class="column-head"><h2 id="col-done">Hecho</h2><span class="count" data-count="done">0</span></div>
+          <ul class="card-list" data-list="done"></ul>
+        </section>
+      </div>
     </main>
   </div>
 
+  <!-- Modal de tarea -->
+  <dialog class="modal" id="task-dialog" data-testid="task-dialog" aria-labelledby="task-dialog-title">
+    <form id="task-form" data-testid="task-form" class="modal-body" novalidate>
+      <h2 id="task-dialog-title">Nueva tarea</h2>
+      <p class="subtitle">Crea una tarea para tu tablero.</p>
+
+      <div class="field">
+        <label for="task-title">Título <span class="req" aria-hidden="true">*</span></label>
+        <input id="task-title" name="title" type="text" maxlength="120" autocomplete="off" required aria-required="true" aria-describedby="task-title-error">
+        <p class="field-error" id="task-title-error" data-testid="task-title-error" hidden></p>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="task-priority">Prioridad</label>
+          <select id="task-priority" name="priority">
+            <option value="alta">Alta</option>
+            <option value="media" selected>Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="task-due">Fecha límite <span class="optional">(opcional)</span></label>
+          <input id="task-due" name="due" type="date">
+        </div>
+      </div>
+      <div class="field">
+        <label for="task-status">Estado</label>
+        <select id="task-status" name="status">
+          <option value="todo" selected>Por hacer</option>
+          <option value="doing">En progreso</option>
+          <option value="done">Hecho</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="task-cancel">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Guardar tarea</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/js/auth.js"></script>
+  <script src="/js/tasks.js"></script>
   <script>
     (function () {
       'use strict';
@@ -397,20 +531,131 @@
         byId(mode === 'login' ? 'login-title' : 'register-title').focus();
       }
 
+      // ---------- Tablero ----------
+      var Tasks = window.TaskFlowTasks;
+      var storesByUser = {};   // tareas en memoria por cuenta; se pierden al recargar
+      var lastCreatedId = null;
+      var ICON_EMPTY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+      var ICON_DUE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+
+      function currentStore() {
+        var user = auth.currentUser();
+        if (!storesByUser[user]) storesByUser[user] = Tasks.createTaskStore();
+        return storesByUser[user];
+      }
+
+      function priorityLabel(id) {
+        for (var i = 0; i < Tasks.PRIORITIES.length; i++) if (Tasks.PRIORITIES[i].id === id) return Tasks.PRIORITIES[i].label;
+        return id;
+      }
+
+      function renderCard(task) {
+        var li = document.createElement('li');
+        li.className = 'task-card' + (task.id === lastCreatedId ? ' is-new' : '');
+        li.setAttribute('data-task-id', String(task.id));
+        li.setAttribute('data-testid', 'task-card');
+
+        var title = document.createElement('p');
+        title.className = 'task-title';
+        title.textContent = task.title;
+        li.appendChild(title);
+
+        var meta = document.createElement('div');
+        meta.className = 'task-meta';
+        var badge = document.createElement('span');
+        badge.className = 'badge badge-' + task.priority;
+        badge.setAttribute('data-testid', 'task-priority');
+        badge.textContent = priorityLabel(task.priority);
+        meta.appendChild(badge);
+        if (task.due) {
+          var due = document.createElement('span');
+          due.className = 'due';
+          due.setAttribute('data-testid', 'task-due');
+          due.innerHTML = ICON_DUE;
+          var time = document.createElement('time');
+          time.dateTime = task.due;
+          time.textContent = Tasks.formatDue(task.due);
+          due.appendChild(time);
+          meta.appendChild(due);
+        }
+        li.appendChild(meta);
+        return li;
+      }
+
+      function renderBoard() {
+        var store = currentStore();
+        Tasks.STATUSES.forEach(function (status) {
+          var tasks = store.byStatus(status.id);
+          var list = document.querySelector('[data-list="' + status.id + '"]');
+          list.textContent = '';
+          document.querySelector('[data-count="' + status.id + '"]').textContent = String(tasks.length);
+          if (!tasks.length) {
+            var empty = document.createElement('li');
+            empty.className = 'empty-col';
+            empty.innerHTML = ICON_EMPTY + '<span>Sin tareas</span>';
+            list.appendChild(empty);
+            return;
+          }
+          tasks.forEach(function (task) { list.appendChild(renderCard(task)); });
+        });
+      }
+
+      // ---------- Modal de tarea ----------
+      var taskDialog = byId('task-dialog');
+      var taskForm = byId('task-form');
+      var taskTitle = byId('task-title');
+      var taskTitleError = byId('task-title-error');
+
+      function setTitleError(message) {
+        taskTitleError.textContent = message || '';
+        taskTitleError.hidden = !message;
+        taskTitle.setAttribute('aria-invalid', message ? 'true' : 'false');
+      }
+
+      function openTaskDialog() {
+        taskForm.reset();
+        setTitleError('');
+        taskDialog.showModal();
+        taskTitle.focus();
+      }
+
+      byId('new-task').addEventListener('click', openTaskDialog);
+      byId('task-cancel').addEventListener('click', function () { taskDialog.close(); });
+      taskDialog.addEventListener('close', function () { byId('new-task').focus(); });
+
+      taskTitle.addEventListener('input', function () {
+        if (taskTitle.value.trim()) setTitleError('');
+      });
+
+      taskForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var result = currentStore().add({
+          title: taskTitle.value,
+          priority: byId('task-priority').value,
+          due: byId('task-due').value,
+          status: byId('task-status').value,
+        });
+        if (!result.ok) {
+          setTitleError(result.error);
+          taskTitle.focus();
+          return;
+        }
+        lastCreatedId = result.task.id;
+        taskDialog.close();
+        renderBoard();
+      });
+
       function render() {
         var user = auth.currentUser();
         authView.hidden = !!user;
         appView.hidden = !user;
         if (user) {
-          var isNew = entry === 'register';
           byId('user-email').textContent = user;
-          byId('session-email').textContent = user;
-          byId('session-email-new').textContent = user;
           byId('user-avatar').textContent = user.charAt(0).toUpperCase();
-          byId('success-title').textContent = isNew ? 'Cuenta creada' : 'Sesión iniciada';
-          byId('success-text-login').hidden = isNew;
-          byId('success-text-register').hidden = !isNew;
-          byId('success-title').focus();
+          byId('session-pill').textContent = entry === 'register' ? 'Cuenta creada' : 'Sesión iniciada';
+          lastCreatedId = null;
+          renderBoard();
+          byId('board-title').focus();
         }
       }
 

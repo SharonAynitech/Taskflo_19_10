@@ -8,12 +8,18 @@
   <style>
     :root {
       --color-primary: #4F46E5;
+      --color-primary-hover: #4338CA;
       --color-primary-fg: #FFFFFF;
+      --color-primary-soft: #EEF2FF;
       --color-bg: #F5F6F8;
       --color-surface: #FFFFFF;
+      --color-surface-2: #F8FAFC;
       --color-text: #111827;
       --color-text-sub: #4B5563;
       --color-success: #10B981;
+      --color-destructive: #EF4444;
+      --color-error-bg: #FEE2E2;
+      --color-error-text: #991B1B;
       --border-color: #E5E7EB;
       --radius-md: 8px;
       --radius-lg: 12px;
@@ -22,16 +28,15 @@
       --spacing-unit: 8px;
       --transition-fast: 150ms ease-in-out;
       --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --control-height: 40px;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
-
     html, body { margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
 
     body {
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
       font-family: var(--font-system);
       font-weight: 400;
       line-height: 1.5;
@@ -40,145 +45,290 @@
       overflow-wrap: anywhere;
     }
 
-    .app-header {
-      display: flex;
-      align-items: center;
-      padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+    :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    /* Destinos de foco programático (anuncio a lectores de pantalla), no controles: sin anillo */
+    [tabindex="-1"]:focus { outline: none; }
+
+    .brand { display: inline-flex; align-items: center; gap: 12px; color: var(--color-text); text-decoration: none; }
+    .brand-mark {
+      display: inline-grid; place-items: center; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      background: var(--color-primary); color: var(--color-primary-fg);
+      font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+    }
+    .brand-name { font-weight: 700; font-size: 18px; color: var(--color-text); }
+
+    /* ---------- Vista de autenticación ---------- */
+    .auth-view {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .auth-brand {
+      display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
+      padding: 48px;
+      background: var(--color-surface);
+      border-right: 1px solid var(--border-color);
+    }
+    .auth-brand .tagline { margin: 4px 0 0; font-size: 14px; color: var(--color-text-sub); }
+    .auth-brand h2 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 32px); font-weight: 700; line-height: 1.2; max-width: 18ch; }
+    .auth-brand .lead { margin: 0 0 24px; color: var(--color-text-sub); max-width: 44ch; }
+    .feature-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .feature-list li { display: flex; align-items: center; gap: 12px; font-weight: 500; }
+    .feature-list svg { flex-shrink: 0; color: var(--color-primary); }
+    .footnote { margin: 0; font-size: 13px; color: var(--color-text-sub); }
+
+    .auth-panel { display: flex; align-items: center; justify-content: center; padding: 48px 16px; }
+
+    .card {
+      width: 100%; max-width: 420px;
+      background: var(--color-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+    }
+    .card h1 { margin: 0 0 4px; font-size: 24px; font-weight: 700; line-height: 1.25; }
+    .card .subtitle { margin: 0 0 24px; color: var(--color-text-sub); }
+
+    .field { display: grid; gap: 6px; margin-bottom: 16px; }
+    .field label { font-size: 14px; font-weight: 600; }
+    .field input {
+      height: var(--control-height); width: 100%;
+      padding: 0 12px;
+      font: inherit; color: var(--color-text);
+      background: var(--color-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .field input[aria-invalid="true"] { border-color: var(--color-destructive); }
+
+    .alert {
+      display: flex; gap: 8px; align-items: flex-start;
+      margin-bottom: 16px; padding: 10px 12px;
+      border: 1px solid var(--color-destructive);
+      border-radius: var(--radius-md);
+      background: var(--color-error-bg); color: var(--color-error-text);
+      font-size: 14px; font-weight: 500;
+    }
+    .alert svg { flex-shrink: 0; margin-top: 2px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      height: var(--control-height); padding: 0 16px;
+      font: inherit; font-weight: 600; font-size: 15px;
+      border-radius: var(--radius-md); border: 1px solid transparent;
+      cursor: pointer;
+      transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    }
+    .btn-primary { width: 100%; background: var(--color-primary); color: var(--color-primary-fg); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--border-color); }
+    .btn-secondary:hover { background: var(--color-surface-2); }
+
+    .demo-box {
+      margin-top: 24px; padding: 12px 16px;
+      background: var(--color-surface-2);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+    }
+    .demo-box p { margin: 0 0 8px; color: var(--color-text-sub); }
+    .demo-box .demo-title { font-weight: 600; color: var(--color-text); }
+    .demo-box code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--color-text); }
+    .link-btn {
+      padding: 0; border: 0; background: none;
+      font: inherit; font-weight: 600; color: var(--color-primary);
+      cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+    }
+
+    /* ---------- Vista con sesión iniciada ---------- */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      padding: 12px 24px;
       background: var(--color-surface);
       border-bottom: 1px solid var(--border-color);
     }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      color: var(--color-text);
+    .user-menu { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .avatar {
+      display: inline-grid; place-items: center; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--color-primary-soft); color: var(--color-primary);
+      font-weight: 700; font-size: 14px;
     }
+    .user-email { font-size: 14px; font-weight: 500; color: var(--color-text-sub); min-width: 0; }
 
-    .brand-mark {
-      display: inline-grid;
-      place-items: center;
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-md);
-      background: var(--color-primary);
-      color: var(--color-primary-fg);
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.02em;
-      flex-shrink: 0;
+    .app-main { display: flex; justify-content: center; padding: 48px 16px; }
+    .success-card { max-width: 520px; text-align: center; }
+    .success-icon {
+      display: inline-grid; place-items: center;
+      width: 48px; height: 48px; margin-bottom: 16px;
+      border-radius: 50%; background: #DCFCE7; color: #166534;
     }
+    .success-card .subtitle { margin-bottom: 0; }
+    .success-card strong { color: var(--color-text); }
 
-    .brand-name {
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--color-text);
+    @media (max-width: 860px) {
+      .auth-view { grid-template-columns: minmax(0, 1fr); }
+      .auth-brand { padding: 24px 16px; border-right: 0; border-bottom: 1px solid var(--border-color); gap: 20px; }
+      .auth-brand .feature-list, .auth-brand .lead { display: none; }
+      .auth-panel { padding: 24px 16px 48px; align-items: flex-start; }
     }
-
-    main {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: calc(var(--spacing-unit) * 3) 16px;
-    }
-
-    .splash {
-      width: 100%;
-      max-width: 520px;
-      text-align: center;
-      background: var(--color-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: calc(var(--spacing-unit) * 5) calc(var(--spacing-unit) * 3);
-    }
-
-    .splash .brand-mark {
-      width: 56px;
-      height: 56px;
-      border-radius: var(--radius-lg);
-      font-size: 22px;
-      margin-bottom: calc(var(--spacing-unit) * 2);
-    }
-
-    .splash h1 {
-      margin: 0 0 var(--spacing-unit);
-      font-size: clamp(28px, 6vw, 36px);
-      font-weight: 700;
-      line-height: 1.2;
-      color: var(--color-text);
-    }
-
-    .project-name {
-      margin: 0 0 calc(var(--spacing-unit) * 2);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--color-text-sub);
-    }
-
-    .status-message {
-      margin: 0 auto;
-      max-width: 40ch;
-      font-size: 16px;
-      color: var(--color-text-sub);
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--spacing-unit);
-      margin-top: calc(var(--spacing-unit) * 3);
-      padding: 4px 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-text);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--color-success);
-    }
-
-    .app-footer {
-      padding: calc(var(--spacing-unit) * 2) 16px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--color-text-sub);
-    }
-
     @media (max-width: 480px) {
-      .app-header { padding: 12px 16px; }
-      .splash { padding: 32px 16px; }
+      .card { padding: 24px 16px; }
+      .topbar { padding: 12px 16px; }
+      .user-email { display: none; }
     }
-
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <a class="brand" href="/" aria-label="TaskFlow, inicio">
-      <span class="brand-mark" aria-hidden="true">TF</span>
-      <span class="brand-name">TaskFlow</span>
-    </a>
-  </header>
+  <!-- Vista de autenticación -->
+  <div class="auth-view" id="auth-view">
+    <aside class="auth-brand">
+      <div>
+        <span class="brand">
+          <span class="brand-mark" aria-hidden="true">TF</span>
+          <span>
+            <span class="brand-name" data-testid="app-name">TaskFlow</span>
+            <p class="tagline">Gestor de tareas personal</p>
+          </span>
+        </span>
+      </div>
+      <div>
+        <h2>Todas tus tareas, en un solo lugar ordenado.</h2>
+        <p class="lead">Crea, prioriza y da seguimiento a lo que importa. Sin ruido, sin fricción: solo las tareas que tienes delante.</p>
+        <ul class="feature-list">
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Tablero Kanban y vista de tabla</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 8v5l-4 2v-7z"/></svg>Filtros por estado y prioridad</li>
+          <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/></svg>Arrastra para cambiar el estado</li>
+        </ul>
+      </div>
+      <p class="footnote">Prototipo de CLEO · los datos viven solo en esta sesión.</p>
+    </aside>
 
-  <main>
-    <section class="splash" aria-labelledby="app-name">
-      <span class="brand-mark" aria-hidden="true">TF</span>
-      <h1 id="app-name" data-testid="app-name">TaskFlow</h1>
-      <p class="project-name">Taskflo_19_10</p>
-      <p class="status-message" data-testid="status-message">La aplicación está iniciada correctamente y preparada para incorporar las siguientes historias de usuario.</p>
-      <span class="status-pill" role="status"><span class="status-dot" aria-hidden="true"></span>Aplicación en línea</span>
-    </section>
-  </main>
+    <main class="auth-panel">
+      <section class="card" aria-labelledby="login-title">
+        <h1 id="login-title">Bienvenido de nuevo</h1>
+        <p class="subtitle">Ingresa tus credenciales para acceder a tu área de tareas.</p>
 
-  <footer class="app-footer">Gestor de tareas personal</footer>
+        <form id="login-form" data-testid="login-form" novalidate>
+          <div class="alert" id="login-error" data-testid="login-error" role="alert" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            <span id="login-error-text"></span>
+          </div>
+
+          <div class="field">
+            <label for="login-email">Correo electrónico</label>
+            <input id="login-email" name="email" type="email" autocomplete="username" inputmode="email" aria-describedby="login-error-text">
+          </div>
+          <div class="field">
+            <label for="login-password">Contraseña</label>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" aria-describedby="login-error-text">
+          </div>
+
+          <button class="btn btn-primary" type="submit">Iniciar sesión</button>
+        </form>
+
+        <div class="demo-box">
+          <p class="demo-title">Cuenta de prueba</p>
+          <p><code>demo@taskflow.test</code> · <code>Demo1234</code></p>
+          <button class="link-btn" type="button" id="fill-demo">Usar la cuenta de prueba</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Vista con sesión iniciada -->
+  <div id="app-view" data-testid="app-view" hidden>
+    <header class="topbar">
+      <span class="brand">
+        <span class="brand-mark" aria-hidden="true">TF</span>
+        <span class="brand-name">TaskFlow</span>
+      </span>
+      <div class="user-menu">
+        <span class="avatar" id="user-avatar" aria-hidden="true"></span>
+        <span class="user-email" id="user-email" data-testid="user-email"></span>
+        <button class="btn btn-secondary" type="button" id="logout">Cerrar sesión</button>
+      </div>
+    </header>
+    <main class="app-main">
+      <section class="card success-card" data-testid="session-success" aria-labelledby="success-title">
+        <span class="success-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+        </span>
+        <h1 id="success-title" tabindex="-1">Sesión iniciada</h1>
+        <p class="subtitle">Estás conectado como <strong id="session-email"></strong>. Ya puedes gestionar tus tareas en el tablero.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var auth = window.TaskFlowAuth.createAuth();
+      var demo = window.TaskFlowAuth.DEMO_ACCOUNT;
+
+      var authView = document.getElementById('auth-view');
+      var appView = document.getElementById('app-view');
+      var form = document.getElementById('login-form');
+      var emailInput = document.getElementById('login-email');
+      var passwordInput = document.getElementById('login-password');
+      var errorBox = document.getElementById('login-error');
+      var errorText = document.getElementById('login-error-text');
+
+      function setError(message) {
+        errorText.textContent = message || '';
+        errorBox.hidden = !message;
+        emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+        passwordInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+      }
+
+      function render() {
+        var user = auth.currentUser();
+        authView.hidden = !!user;
+        appView.hidden = !user;
+        if (user) {
+          document.getElementById('user-email').textContent = user;
+          document.getElementById('session-email').textContent = user;
+          document.getElementById('user-avatar').textContent = user.charAt(0).toUpperCase();
+          document.getElementById('success-title').focus();
+        }
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var result = auth.login(emailInput.value, passwordInput.value);
+        if (!result.ok) {
+          setError(result.error);
+          (emailInput.value.trim() ? passwordInput : emailInput).focus();
+          return;
+        }
+        setError('');
+        form.reset();
+        render();
+      });
+
+      document.getElementById('fill-demo').addEventListener('click', function () {
+        emailInput.value = demo.email;
+        passwordInput.value = demo.password;
+        setError('');
+        passwordInput.focus();
+      });
+
+      document.getElementById('logout').addEventListener('click', function () {
+        auth.logout();
+        render();
+        emailInput.focus();
+      });
+
+      render();
+    })();
+  </script>
 </body>
 </html>

@@ -44,6 +44,21 @@ test('la página define y usa las variables CSS de la marca', async () => {
   assert.match(html, /background:\s*var\(--color-primary\)/);
 });
 
+test('GET / muestra el formulario de inicio de sesión (US-02-1)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<form[^>]*id="login-form"[^>]*novalidate/);
+  assert.match(html, /<input[^>]*name="email"/);
+  assert.match(html, /<input[^>]*name="password"[^>]*type="password"|<input[^>]*type="password"[^>]*name="password"/);
+  assert.match(html, /<script src="\/js\/auth\.js"><\/script>/);
+});
+
+test('GET /js/auth.js se sirve como JavaScript', async () => {
+  const res = await fetch(`${base}/js/auth.js`);
+  assert.strictEqual(res.status, 200);
+  assert.match(res.headers.get('content-type'), /text\/javascript/);
+  assert.match(await res.text(), /demo@taskflow\.test/);
+});
+
 test('rutas desconocidas devuelven 404', async () => {
   const res = await fetch(`${base}/no-existe`);
   assert.strictEqual(res.status, 404);

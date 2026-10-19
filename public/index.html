@@ -144,6 +144,38 @@
       cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
     }
 
+    .switch-line { margin: 20px 0 0; text-align: center; font-size: 14px; color: var(--color-text-sub); }
+
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+    .card-head h1 { margin: 0; }
+    .pill {
+      display: inline-flex; align-items: center;
+      padding: 2px 10px; border-radius: 999px;
+      background: var(--color-primary-soft); color: var(--color-primary);
+      font-size: 12px; font-weight: 600;
+    }
+
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 84px; }
+    .toggle-password {
+      position: absolute; top: 4px; right: 4px; bottom: 4px;
+      padding: 0 10px;
+      border: 0; border-radius: 6px; background: transparent;
+      font: inherit; font-size: 13px; font-weight: 600; color: var(--color-text-sub);
+      cursor: pointer;
+    }
+    .toggle-password:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+    .step-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+    .step-list li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: start; }
+    .step-num {
+      display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--color-primary-soft); color: var(--color-primary); font-size: 13px; font-weight: 700;
+    }
+    .step-list strong { display: block; font-weight: 600; }
+    .step-list span.desc { display: block; font-size: 14px; color: var(--color-text-sub); }
+    .session-note { margin: 16px 0 0; font-size: 13px; color: var(--color-text-sub); }
+
     /* ---------- Vista con sesión iniciada ---------- */
     .topbar {
       display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
@@ -173,7 +205,7 @@
     @media (max-width: 860px) {
       .auth-view { grid-template-columns: minmax(0, 1fr); }
       .auth-brand { padding: 24px 16px; border-right: 0; border-bottom: 1px solid var(--border-color); gap: 20px; }
-      .auth-brand .feature-list, .auth-brand .lead { display: none; }
+      .auth-brand .feature-list, .auth-brand .step-list, .auth-brand .lead { display: none; }
       .auth-panel { padding: 24px 16px 48px; align-items: flex-start; }
     }
     @media (max-width: 480px) {
@@ -202,18 +234,23 @@
       <div>
         <h2>Todas tus tareas, en un solo lugar ordenado.</h2>
         <p class="lead">Crea, prioriza y da seguimiento a lo que importa. Sin ruido, sin fricción: solo las tareas que tienes delante.</p>
-        <ul class="feature-list">
+        <ul class="feature-list" id="brand-features">
           <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Tablero Kanban y vista de tabla</li>
           <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16l-6 8v5l-4 2v-7z"/></svg>Filtros por estado y prioridad</li>
           <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/></svg>Arrastra para cambiar el estado</li>
         </ul>
+        <ol class="step-list" id="brand-steps" hidden>
+          <li><span class="step-num" aria-hidden="true">1</span><span><strong>Tu correo</strong><span class="desc">Te sirve para identificarte en la sesión.</span></span></li>
+          <li><span class="step-num" aria-hidden="true">2</span><span><strong>Tu contraseña</strong><span class="desc">La eliges tú y se guarda solo en esta sesión.</span></span></li>
+          <li><span class="step-num" aria-hidden="true">3</span><span><strong>A tus tareas</strong><span class="desc">Tablero Kanban y vista de tabla te esperan.</span></span></li>
+        </ol>
       </div>
       <p class="footnote">Prototipo de CLEO · los datos viven solo en esta sesión.</p>
     </aside>
 
     <main class="auth-panel">
-      <section class="card" aria-labelledby="login-title">
-        <h1 id="login-title">Bienvenido de nuevo</h1>
+      <section class="card" id="login-card" aria-labelledby="login-title">
+        <h1 id="login-title" tabindex="-1">Bienvenido de nuevo</h1>
         <p class="subtitle">Ingresa tus credenciales para acceder a tu área de tareas.</p>
 
         <form id="login-form" data-testid="login-form" novalidate>
@@ -228,7 +265,10 @@
           </div>
           <div class="field">
             <label for="login-password">Contraseña</label>
-            <input id="login-password" name="password" type="password" autocomplete="current-password" aria-describedby="login-error-text">
+            <div class="password-wrap">
+              <input id="login-password" name="password" type="password" autocomplete="current-password" aria-describedby="login-error-text">
+              <button class="toggle-password" type="button" data-toggle-for="login-password" aria-pressed="false">Mostrar</button>
+            </div>
           </div>
 
           <button class="btn btn-primary" type="submit">Iniciar sesión</button>
@@ -239,6 +279,43 @@
           <p><code>demo@taskflow.test</code> · <code>Demo1234</code></p>
           <button class="link-btn" type="button" id="fill-demo">Usar la cuenta de prueba</button>
         </div>
+
+        <p class="switch-line">¿Aún no tienes una cuenta? <button class="link-btn" type="button" id="show-register">Crea tu cuenta</button></p>
+      </section>
+
+      <section class="card" id="register-card" data-testid="register-card" aria-labelledby="register-title" hidden>
+        <div class="card-head">
+          <h1 id="register-title" tabindex="-1">Crea tu cuenta</h1>
+          <span class="pill">Paso único</span>
+        </div>
+        <p class="subtitle">Regístrate para empezar a organizar tus tareas en TaskFlow.</p>
+
+        <form id="register-form" data-testid="register-form" novalidate>
+          <div class="alert" id="register-error" data-testid="register-error" role="alert" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+            <span id="register-error-text"></span>
+          </div>
+
+          <div class="field">
+            <label for="register-email">Correo electrónico</label>
+            <input id="register-email" name="email" type="email" autocomplete="email" inputmode="email" aria-describedby="register-error-text">
+          </div>
+          <div class="field">
+            <label for="register-password">Contraseña</label>
+            <div class="password-wrap">
+              <input id="register-password" name="password" type="password" autocomplete="new-password" aria-describedby="register-error-text">
+              <button class="toggle-password" type="button" data-toggle-for="register-password" aria-pressed="false">Mostrar</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="register-confirm">Confirmar contraseña</label>
+            <input id="register-confirm" name="confirm" type="password" autocomplete="new-password" aria-describedby="register-error-text">
+          </div>
+
+          <button class="btn btn-primary" type="submit">Crear cuenta y entrar</button>
+        </form>
+
+        <p class="switch-line">¿Ya tienes una cuenta? <button class="link-btn" type="button" id="show-login">Inicia sesión</button></p>
       </section>
     </main>
   </div>
@@ -262,7 +339,9 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
         </span>
         <h1 id="success-title" tabindex="-1">Sesión iniciada</h1>
-        <p class="subtitle">Estás conectado como <strong id="session-email"></strong>. Ya puedes gestionar tus tareas en el tablero.</p>
+        <p class="subtitle" id="success-text-login">Estás conectado como <strong id="session-email"></strong>. Ya puedes gestionar tus tareas en el tablero.</p>
+        <p class="subtitle" id="success-text-register" hidden>Ya tienes tu identidad en TaskFlow. Estás conectado como <strong id="session-email-new"></strong> y listo para gestionar tus tareas.</p>
+        <p class="session-note">Al salir, la cuenta y las tareas de esta sesión se descartan.</p>
       </section>
     </main>
   </div>
@@ -274,19 +353,48 @@
       var auth = window.TaskFlowAuth.createAuth();
       var demo = window.TaskFlowAuth.DEMO_ACCOUNT;
 
-      var authView = document.getElementById('auth-view');
-      var appView = document.getElementById('app-view');
-      var form = document.getElementById('login-form');
-      var emailInput = document.getElementById('login-email');
-      var passwordInput = document.getElementById('login-password');
-      var errorBox = document.getElementById('login-error');
-      var errorText = document.getElementById('login-error-text');
+      var byId = function (id) { return document.getElementById(id); };
+      var authView = byId('auth-view');
+      var appView = byId('app-view');
 
-      function setError(message) {
-        errorText.textContent = message || '';
-        errorBox.hidden = !message;
-        emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
-        passwordInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+      var loginForm = byId('login-form');
+      var loginEmail = byId('login-email');
+      var loginPassword = byId('login-password');
+
+      var registerForm = byId('register-form');
+      var registerFields = { email: byId('register-email'), password: byId('register-password'), confirm: byId('register-confirm') };
+
+      // Estado de la vista de autenticación: 'login' o 'register'; y cómo se entró: 'login' o 'register'.
+      var mode = 'login';
+      var entry = 'login';
+
+      function setError(prefix, message, invalidInputs) {
+        byId(prefix + '-error-text').textContent = message || '';
+        byId(prefix + '-error').hidden = !message;
+        var form = byId(prefix + '-form');
+        Array.prototype.forEach.call(form.querySelectorAll('input'), function (input) {
+          input.setAttribute('aria-invalid', invalidInputs && invalidInputs.indexOf(input) !== -1 ? 'true' : 'false');
+        });
+      }
+
+      function resetForm(prefix) {
+        byId(prefix + '-form').reset();
+        setError(prefix, '');
+        Array.prototype.forEach.call(document.querySelectorAll('[data-toggle-for]'), function (btn) {
+          byId(btn.getAttribute('data-toggle-for')).type = 'password';
+          btn.textContent = 'Mostrar';
+          btn.setAttribute('aria-pressed', 'false');
+        });
+      }
+
+      function showMode(next) {
+        mode = next;
+        byId('login-card').hidden = mode !== 'login';
+        byId('register-card').hidden = mode !== 'register';
+        byId('brand-features').hidden = mode !== 'login';
+        byId('brand-steps').hidden = mode !== 'register';
+        resetForm(mode === 'login' ? 'register' : 'login');
+        byId(mode === 'login' ? 'login-title' : 'register-title').focus();
       }
 
       function render() {
@@ -294,37 +402,72 @@
         authView.hidden = !!user;
         appView.hidden = !user;
         if (user) {
-          document.getElementById('user-email').textContent = user;
-          document.getElementById('session-email').textContent = user;
-          document.getElementById('user-avatar').textContent = user.charAt(0).toUpperCase();
-          document.getElementById('success-title').focus();
+          var isNew = entry === 'register';
+          byId('user-email').textContent = user;
+          byId('session-email').textContent = user;
+          byId('session-email-new').textContent = user;
+          byId('user-avatar').textContent = user.charAt(0).toUpperCase();
+          byId('success-title').textContent = isNew ? 'Cuenta creada' : 'Sesión iniciada';
+          byId('success-text-login').hidden = isNew;
+          byId('success-text-register').hidden = !isNew;
+          byId('success-title').focus();
         }
       }
 
-      form.addEventListener('submit', function (event) {
+      loginForm.addEventListener('submit', function (event) {
         event.preventDefault();
-        var result = auth.login(emailInput.value, passwordInput.value);
+        var result = auth.login(loginEmail.value, loginPassword.value);
         if (!result.ok) {
-          setError(result.error);
-          (emailInput.value.trim() ? passwordInput : emailInput).focus();
+          setError('login', result.error, [loginEmail, loginPassword]);
+          (loginEmail.value.trim() ? loginPassword : loginEmail).focus();
           return;
         }
-        setError('');
-        form.reset();
+        resetForm('login');
+        entry = 'login';
         render();
       });
 
-      document.getElementById('fill-demo').addEventListener('click', function () {
-        emailInput.value = demo.email;
-        passwordInput.value = demo.password;
-        setError('');
-        passwordInput.focus();
+      registerForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var f = registerFields;
+        var result = auth.register(f.email.value, f.password.value, f.confirm.value);
+        if (!result.ok) {
+          var invalid = result.field === 'confirm' && result.error === window.TaskFlowAuth.MESSAGES.mismatch
+            ? [f.password, f.confirm]
+            : [f[result.field]];
+          setError('register', result.error, invalid);
+          f[result.field].focus();
+          return;
+        }
+        resetForm('register');
+        entry = 'register';
+        render();
       });
 
-      document.getElementById('logout').addEventListener('click', function () {
+      byId('fill-demo').addEventListener('click', function () {
+        loginEmail.value = demo.email;
+        loginPassword.value = demo.password;
+        setError('login', '');
+        loginPassword.focus();
+      });
+
+      byId('show-register').addEventListener('click', function () { showMode('register'); });
+      byId('show-login').addEventListener('click', function () { showMode('login'); });
+
+      Array.prototype.forEach.call(document.querySelectorAll('[data-toggle-for]'), function (btn) {
+        btn.addEventListener('click', function () {
+          var input = byId(btn.getAttribute('data-toggle-for'));
+          var show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          btn.textContent = show ? 'Ocultar' : 'Mostrar';
+          btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+        });
+      });
+
+      byId('logout').addEventListener('click', function () {
         auth.logout();
         render();
-        emailInput.focus();
+        showMode('login');
       });
 
       render();

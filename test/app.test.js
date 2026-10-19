@@ -52,6 +52,14 @@ test('GET / muestra el formulario de inicio de sesión (US-02-1)', async () => {
   assert.match(html, /<script src="\/js\/auth\.js"><\/script>/);
 });
 
+test('GET / incluye el formulario de registro (US-02-2)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<form[^>]*id="register-form"[^>]*novalidate/);
+  assert.match(html, /<input[^>]*name="confirm"/);
+  assert.match(html, /id="show-register"/);
+  assert.match(html, /id="show-login"/);
+});
+
 test('GET /js/auth.js se sirve como JavaScript', async () => {
   const res = await fetch(`${base}/js/auth.js`);
   assert.strictEqual(res.status, 200);

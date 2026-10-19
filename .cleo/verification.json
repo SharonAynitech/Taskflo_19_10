@@ -1,0 +1,36 @@
+{
+  "stories": {
+    "US-01-1": {
+      "criteria_digest": "0984022a97d78f71eb77eccf046cacea45128cebd5edce59e6610c8227a95c82",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "visible", "selector": "header .brand-name" },
+            { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" },
+            { "action": "visible", "selector": "[data-testid=status-message]" }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "visible", "selector": "[data-testid=app-name]" },
+            { "action": "visible", "selector": "[data-testid=status-message]" },
+            { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" }
+          ]
+        },
+        {
+          "criterion_index": 2,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "visible", "selector": ".splash .brand-mark" },
+            { "action": "text", "selector": "header .brand-mark", "value": "TF" },
+            { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" }
+          ]
+        }
+      ]
+    }
+  }
+}

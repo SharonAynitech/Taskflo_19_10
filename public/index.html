@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaskFlow</title>
+  <meta name="description" content="TaskFlow, gestor de tareas personal">
+  <style>
+    :root {
+      --color-primary: #4F46E5;
+      --color-primary-fg: #FFFFFF;
+      --color-bg: #F5F6F8;
+      --color-surface: #FFFFFF;
+      --color-text: #111827;
+      --color-text-sub: #4B5563;
+      --color-success: #10B981;
+      --border-color: #E5E7EB;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --spacing-unit: 8px;
+      --transition-fast: 150ms ease-in-out;
+      --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-system);
+      font-weight: 400;
+      line-height: 1.5;
+      background: var(--color-bg);
+      color: var(--color-text);
+      overflow-wrap: anywhere;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--color-text);
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      color: var(--color-primary-fg);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--color-text);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(var(--spacing-unit) * 3) 16px;
+    }
+
+    .splash {
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+      background: var(--color-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: calc(var(--spacing-unit) * 5) calc(var(--spacing-unit) * 3);
+    }
+
+    .splash .brand-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-lg);
+      font-size: 22px;
+      margin-bottom: calc(var(--spacing-unit) * 2);
+    }
+
+    .splash h1 {
+      margin: 0 0 var(--spacing-unit);
+      font-size: clamp(28px, 6vw, 36px);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--color-text);
+    }
+
+    .project-name {
+      margin: 0 0 calc(var(--spacing-unit) * 2);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-sub);
+    }
+
+    .status-message {
+      margin: 0 auto;
+      max-width: 40ch;
+      font-size: 16px;
+      color: var(--color-text-sub);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-unit);
+      margin-top: calc(var(--spacing-unit) * 3);
+      padding: 4px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-success);
+    }
+
+    .app-footer {
+      padding: calc(var(--spacing-unit) * 2) 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--color-text-sub);
+    }
+
+    @media (max-width: 480px) {
+      .app-header { padding: 12px 16px; }
+      .splash { padding: 32px 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="/" aria-label="TaskFlow, inicio">
+      <span class="brand-mark" aria-hidden="true">TF</span>
+      <span class="brand-name">TaskFlow</span>
+    </a>
+  </header>
+
+  <main>
+    <section class="splash" aria-labelledby="app-name">
+      <span class="brand-mark" aria-hidden="true">TF</span>
+      <h1 id="app-name" data-testid="app-name">TaskFlow</h1>
+      <p class="project-name">Taskflo_19_10</p>
+      <p class="status-message" data-testid="status-message">La aplicación está iniciada correctamente y preparada para incorporar las siguientes historias de usuario.</p>
+      <span class="status-pill" role="status"><span class="status-dot" aria-hidden="true"></span>Aplicación en línea</span>
+    </section>
+  </main>
+
+  <footer class="app-footer">Gestor de tareas personal</footer>
+</body>
+</html>

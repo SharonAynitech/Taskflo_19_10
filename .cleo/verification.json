@@ -7,9 +7,8 @@
           "criterion_index": 0,
           "steps": [
             { "action": "goto", "path": "/" },
-            { "action": "visible", "selector": "header .brand-name" },
-            { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" },
-            { "action": "visible", "selector": "[data-testid=status-message]" }
+            { "action": "visible", "selector": ".auth-brand .brand-mark" },
+            { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" }
           ]
         },
         {
@@ -17,7 +16,7 @@
           "steps": [
             { "action": "goto", "path": "/" },
             { "action": "visible", "selector": "[data-testid=app-name]" },
-            { "action": "visible", "selector": "[data-testid=status-message]" },
+            { "action": "visible", "selector": "[data-testid=login-form]" },
             { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" }
           ]
         },
@@ -25,9 +24,41 @@
           "criterion_index": 2,
           "steps": [
             { "action": "goto", "path": "/" },
-            { "action": "visible", "selector": ".splash .brand-mark" },
-            { "action": "text", "selector": "header .brand-mark", "value": "TF" },
-            { "action": "text", "selector": "[data-testid=app-name]", "value": "TaskFlow" }
+            { "action": "visible", "selector": ".auth-brand .brand-mark" },
+            { "action": "text", "selector": ".auth-brand .brand-mark", "value": "TF" }
+          ]
+        }
+      ]
+    },
+    "US-02-1": {
+      "criteria_digest": "fb87ab09b1d821cdf150b0d9c2ffd370153189bb5f06271a860b64bcb95ecadd",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "visible", "selector": "[data-testid=login-form]" },
+            { "action": "fill", "selector": "input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=login-form]" },
+            { "action": "visible", "selector": "[data-testid=session-success]" },
+            { "action": "text", "selector": "[data-testid=session-success]", "value": "Sesión iniciada" }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "text", "selector": "[data-testid=login-error]", "value": "Ingresa tu correo y tu contraseña" },
+            { "action": "visible", "selector": "[data-testid=login-form]" },
+            { "action": "fill", "selector": "input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "input[name=password]", "value": "Incorrecta1" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "text", "selector": "[data-testid=login-error]", "value": "Correo o contraseña incorrectos" },
+            { "action": "hidden", "selector": "[data-testid=app-view]" },
+            { "action": "visible", "selector": "[data-testid=login-form]" }
           ]
         }
       ]

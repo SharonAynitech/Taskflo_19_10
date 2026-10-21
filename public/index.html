@@ -357,6 +357,8 @@
     }
     .batch-count { margin: 0; font-size: 14px; font-weight: 600; }
     .batch-count span { font-weight: 700; }
+    .batch-limit { margin: 0; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: rgba(255, 255, 255, 0.16); }
+    .batch-limit.is-full { background: var(--color-surface); color: var(--color-primary); }
     .batch-field { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
     .batch-field select {
       height: 36px; min-width: 160px; padding: 0 8px;
@@ -370,7 +372,9 @@
     .btn-ghost:hover { background: rgba(255, 255, 255, 0.12); }
     .col-select { width: 44px; }
     .row-check { width: 18px; height: 18px; margin: 0; accent-color: var(--color-primary); cursor: pointer; vertical-align: middle; }
-    .task-table tbody tr.is-selected td { background: var(--color-primary-soft); }
+    .row-check:disabled { cursor: not-allowed; opacity: 0.45; }
+    /* Más específico que el zebra de filas pares para que toda fila seleccionada se vea marcada */
+    .task-table tbody tr.is-selected td, .task-table tbody tr.is-selected:nth-child(even) td { background: var(--color-primary-soft); }
     .task-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; overflow-wrap: normal; }
     .task-table th {
       padding: 0 12px; height: 40px; text-align: left; white-space: nowrap;
@@ -638,6 +642,7 @@
         </div>
         <div class="batch-bar" id="batch-bar" data-testid="batch-bar" role="region" aria-label="Acciones en lote" hidden>
           <p class="batch-count" data-testid="batch-count"><span id="batch-count">0</span> <span id="batch-noun">seleccionadas</span></p>
+          <p class="batch-limit" id="batch-limit" data-testid="batch-limit">Máximo 3 tareas por acción</p>
           <div class="batch-field">
             <label for="batch-status">Cambiar estado a</label>
             <select id="batch-status" data-testid="batch-status">
@@ -654,7 +659,7 @@
           <table class="task-table" data-testid="task-table" aria-labelledby="table-title" aria-describedby="table-sort-desc">
             <thead>
               <tr>
-                <th scope="col" class="col-select"><input type="checkbox" class="row-check" id="select-all" data-testid="select-all" aria-label="Seleccionar todas las tareas visibles"></th>
+                <th scope="col" class="col-select"><input type="checkbox" class="row-check" id="select-all" data-testid="select-all" aria-label="Seleccionar las primeras 3 tareas visibles"></th>
                 <th scope="col" class="col-order">Orden</th>
                 <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="title">Título <span class="sort-icon" aria-hidden="true"></span></button></th>
                 <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="priority">Prioridad <span class="sort-icon" aria-hidden="true"></span></button></th>
@@ -1155,23 +1160,38 @@
 
       function renderBatchBar(visibleCount) {
         var count = selectedIds().length;
+        var full = count >= Tasks.MAX_SELECTION;
+        // Con la casilla general "todas" significa las primeras MAX_SELECTION visibles
+        var selectable = Math.min(visibleCount, Tasks.MAX_SELECTION);
         byId('batch-count').textContent = String(count);
         byId('batch-noun').textContent = count === 1 ? 'seleccionada' : 'seleccionadas';
+        byId('batch-limit').classList.toggle('is-full', full);
         batchBar.hidden = count === 0;
         if (!count) batchStatus.value = '';
         byId('batch-apply').disabled = !batchStatus.value;
-        selectAll.checked = visibleCount > 0 && count === visibleCount;
-        selectAll.indeterminate = count > 0 && count < visibleCount;
+        selectAll.checked = visibleCount > 0 && count === selectable;
+        selectAll.indeterminate = count > 0 && count < selectable;
         selectAll.disabled = visibleCount === 0;
+        // Al llegar al máximo, las casillas sin marcar se desactivan
+        Array.prototype.forEach.call(document.querySelectorAll('#table-panel [data-testid="row-select"]'), function (check) {
+          check.disabled = full && !check.checked;
+          check.title = check.disabled ? 'Máximo ' + Tasks.MAX_SELECTION + ' tareas por acción' : '';
+        });
       }
 
       function selectionMessage() {
         var count = selectedIds().length;
-        return count ? count + (count === 1 ? ' seleccionada' : ' seleccionadas') : 'Ninguna tarea seleccionada';
+        if (!count) return 'Ninguna tarea seleccionada';
+        var text = count + (count === 1 ? ' seleccionada' : ' seleccionadas');
+        return count >= Tasks.MAX_SELECTION ? text + '. Máximo ' + Tasks.MAX_SELECTION + ' tareas por acción' : text;
       }
 
       // Marcar una casilla solo actualiza su fila y la barra, sin volver a pintar la tabla (la casilla conserva el foco).
       function toggleSelected(id, on) {
+        if (on && selectedIds().length >= Tasks.MAX_SELECTION) {
+          renderTable();  // no se admite una más: la casilla vuelve a quedar sin marcar
+          return;
+        }
         if (on) selected[id] = true;
         else delete selected[id];
         var row = document.querySelector('#table-panel [data-task-id="' + id + '"]');
@@ -1183,7 +1203,11 @@
       selectAll.addEventListener('change', function () {
         var on = selectAll.checked;
         selected = {};
-        if (on) Tasks.filterTasks(currentStore().list(), filters).forEach(function (task) { selected[task.id] = true; });
+        if (on) {
+          // Las primeras MAX_SELECTION tareas en el orden en que se ven en la tabla
+          var visible = Tasks.sortTasks(Tasks.filterTasks(currentStore().list(), filters), sortKey, sortDir);
+          Tasks.limitSelection(visible.map(function (task) { return task.id; })).forEach(function (id) { selected[id] = true; });
+        }
         renderTable();
         selectAll.focus();
         byId('board-status').textContent = selectionMessage();

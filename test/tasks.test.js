@@ -256,6 +256,19 @@ test('matchRange da la posición de la coincidencia en el título original', () 
   assert.strictEqual(matchRange('Comprar pan', '  '), null);
 });
 
+// Bug de UAT en US-04-4: como máximo 3 tareas seleccionadas a la vez.
+const { MAX_SELECTION, limitSelection } = require('../public/js/tasks');
+
+test('la selección múltiple admite como máximo 3 tareas', () => {
+  assert.strictEqual(MAX_SELECTION, 3);
+});
+
+test('limitSelection conserva el orden y recorta a las 3 primeras', () => {
+  assert.deepStrictEqual(limitSelection([5, 2, 9, 1, 7]), [5, 2, 9]);
+  assert.deepStrictEqual(limitSelection([4, 8]), [4, 8]);
+  assert.deepStrictEqual(limitSelection([]), []);
+});
+
 // Tests de US-04-4: cambiar el estado de varias tareas a la vez.
 test('moveMany mueve todas las tareas indicadas y devuelve cuántas cambiaron', () => {
   const store = createTaskStore();

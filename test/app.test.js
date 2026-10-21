@@ -135,6 +135,12 @@ test('GET / incluye la búsqueda por título (US-04-3)', async () => {
   assert.match(html, /<kbd[^>]*>\/<\/kbd>/);
 });
 
+test('GET / avisa del máximo de 3 tareas seleccionadas (bug US-04-4)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /id="batch-limit"[^>]*>Máximo 3 tareas por acción</);
+  assert.match(html, /id="select-all"[^>]*aria-label="Seleccionar las primeras 3 tareas visibles"/);
+});
+
 test('GET / incluye la selección múltiple y la barra de acciones en lote (US-04-4)', async () => {
   const html = await (await fetch(`${base}/`)).text();
   assert.match(html, /<input[^>]*type="checkbox"[^>]*id="select-all"/);

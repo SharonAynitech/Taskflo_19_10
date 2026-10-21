@@ -294,6 +294,30 @@
     .tab:hover { color: var(--color-text); background: var(--color-surface-2); }
     .tab[aria-selected="true"] { background: var(--color-primary); color: var(--color-primary-fg); }
 
+    /* ---------- Filtros ---------- */
+    .filter-bar {
+      margin-bottom: 16px; padding: 12px 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+    }
+    .filter-controls { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+    .filter-field { display: inline-flex; align-items: center; gap: 8px; }
+    .filter-field label { font-size: 14px; font-weight: 600; }
+    .filter-field select {
+      height: 36px; min-width: 140px; padding: 0 8px;
+      font: inherit; font-size: 14px; color: var(--color-text);
+      background: var(--color-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+    }
+    .filter-field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .filter-field select.is-active { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .filter-summary { margin: 0 0 0 auto; font-size: 14px; color: var(--color-text-sub); }
+    .filter-summary strong { color: var(--color-text); }
+    .btn-sm { height: 36px; padding: 0 12px; font-size: 14px; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-secondary:disabled:hover { background: var(--color-surface); }
+    .filter-help { margin: 8px 0 0; font-size: 13px; color: var(--color-text-sub); }
+
     /* ---------- Tabla ---------- */
     .table-panel {
       background: var(--color-surface);
@@ -375,6 +399,10 @@
       .topbar { padding: 12px 16px; }
       .user-email, .avatar { display: none; }
       .board-main { padding: 16px; }
+      .filter-field { flex: 1 1 100%; }
+      .filter-field label { min-width: 72px; }
+      .filter-field select { flex: 1; min-width: 0; }
+      .filter-summary { margin-left: 0; }
       .field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
       .modal-body { padding: 20px 16px; }
     }
@@ -526,6 +554,33 @@
         </div>
       </div>
       <p class="sr-only" id="board-status" role="status" aria-live="polite"></p>
+
+      <section class="filter-bar" aria-labelledby="filters-title" aria-describedby="filters-help">
+        <h2 class="sr-only" id="filters-title">Filtros</h2>
+        <div class="filter-controls">
+          <div class="filter-field">
+            <label for="filter-status">Estado</label>
+            <select id="filter-status" data-testid="filter-status">
+              <option value="">Todos</option>
+              <option value="todo">Por hacer</option>
+              <option value="doing">En progreso</option>
+              <option value="done">Hecho</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="filter-priority">Prioridad</label>
+            <select id="filter-priority" data-testid="filter-priority">
+              <option value="">Todas</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
+          <p class="filter-summary" id="filter-summary" data-testid="filter-summary">Mostrando <strong id="filter-shown">0</strong> de <span id="filter-total">0</span> tareas</p>
+          <button class="btn btn-secondary btn-sm" type="button" id="filter-clear" disabled>Limpiar filtros</button>
+        </div>
+        <p class="filter-help" id="filters-help">Usa los menús desplegables para filtrar por estado y prioridad. Los filtros se aplican en la vista de tablero y en la de tabla.</p>
+      </section>
 
       <section class="table-panel" id="table-panel" role="tabpanel" aria-labelledby="view-table-tab" hidden>
         <div class="table-head">
@@ -711,10 +766,11 @@
         if (!result.ok) return;
         highlightId = id;
         renderBoard();
-        byId('board-status').textContent = 'Tarea movida a ' + statusLabel(status);
+        byId('board-status').textContent = 'Tarea movida a ' + statusLabel(status) + hiddenByFilters(result.task);
         if (focusSelect) {
+          // Si los filtros ocultan la tarea movida, el foco pasa al título para no perderse.
           var select = document.querySelector('[data-task-id="' + id + '"] [data-testid="task-move"]');
-          if (select) select.focus();
+          (select || byId('board-title')).focus();
         }
       }
 
@@ -817,23 +873,62 @@
         });
       });
 
+      // ---------- Filtros ----------
+      var filters = { status: '', priority: '' };  // '' = sin filtrar; se aplican al tablero y a la tabla
+      var filterStatus = byId('filter-status');
+      var filterPriority = byId('filter-priority');
+
+      function filtersActive() { return !!(filters.status || filters.priority); }
+      function matchesFilters(task) { return Tasks.filterTasks([task], filters).length === 1; }
+
+      function renderFilters() {
+        var all = currentStore().list();
+        byId('filter-shown').textContent = String(Tasks.filterTasks(all, filters).length);
+        byId('filter-total').textContent = String(all.length);
+        byId('filter-clear').disabled = !filtersActive();
+        filterStatus.value = filters.status;
+        filterPriority.value = filters.priority;
+        filterStatus.classList.toggle('is-active', !!filters.status);
+        filterPriority.classList.toggle('is-active', !!filters.priority);
+      }
+
+      // Aviso para cuando una tarea guardada o movida deja de verse por los filtros activos.
+      function hiddenByFilters(task) { return matchesFilters(task) ? '' : '. No coincide con los filtros activos'; }
+
+      function filterSummary() { return byId('filter-summary').textContent.replace(/\s+/g, ' ').trim(); }
+
+      function applyFilters(next) {
+        filters = next;
+        renderBoard();
+        byId('board-status').textContent = filterSummary();
+      }
+
+      filterStatus.addEventListener('change', function () { applyFilters({ status: filterStatus.value, priority: filters.priority }); });
+      filterPriority.addEventListener('change', function () { applyFilters({ status: filters.status, priority: filterPriority.value }); });
+      // El botón se desactiva al limpiar: el foco pasa al primer filtro para no perderse.
+      byId('filter-clear').addEventListener('click', function () {
+        applyFilters({ status: '', priority: '' });
+        filterStatus.focus();
+      });
+
       function renderBoard() {
         var store = currentStore();
         Tasks.STATUSES.forEach(function (status) {
-          var tasks = store.byStatus(status.id);
+          var tasks = Tasks.filterTasks(store.byStatus(status.id), filters);
           var list = document.querySelector('[data-list="' + status.id + '"]');
           list.textContent = '';
           document.querySelector('[data-count="' + status.id + '"]').textContent = String(tasks.length);
           if (!tasks.length) {
             var empty = document.createElement('li');
             empty.className = 'empty-col';
-            empty.innerHTML = ICON_EMPTY + '<span>Sin tareas</span>';
+            empty.innerHTML = ICON_EMPTY + '<span>' + (filtersActive() ? 'Sin tareas que coincidan' : 'Sin tareas') + '</span>';
             list.appendChild(empty);
             return;
           }
           tasks.forEach(function (task) { list.appendChild(renderCard(task)); });
         });
         renderTable();
+        renderFilters();
       }
 
       // ---------- Vista de tabla ----------
@@ -905,7 +1000,7 @@
 
       function renderTable() {
         var body = document.querySelector('[data-testid="task-table-body"]');
-        var tasks = Tasks.sortTasks(currentStore().list(), sortKey, sortDir);
+        var tasks = Tasks.sortTasks(Tasks.filterTasks(currentStore().list(), filters), sortKey, sortDir);
         body.textContent = '';
         byId('table-sort-desc').textContent = sortDescription();
         Array.prototype.forEach.call(document.querySelectorAll('[data-sort]'), function (btn) {
@@ -1068,7 +1163,7 @@
         taskDialog.close();
         renderBoard();
         (cardControl(editingId, 'task-edit') || byId('new-task')).focus();
-        byId('board-status').textContent = 'Tarea guardada';
+        byId('board-status').textContent = 'Tarea guardada' + hiddenByFilters(result.task);
       });
 
       function render() {
@@ -1082,6 +1177,7 @@
           highlightId = null;
           sortKey = null;
           sortDir = 'asc';
+          filters = { status: '', priority: '' };
           setView('board', false);
           byId('board-status').textContent = '';
           renderBoard();

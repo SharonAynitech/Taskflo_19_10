@@ -191,3 +191,33 @@ test('sortTasks no modifica la lista recibida', () => {
   sortTasks(list, 'priority', 'asc');
   assert.deepStrictEqual(titles(list), ['Comprar pan', 'abrir cuenta', 'Llamar al banco', 'Enviar informe']);
 });
+
+// Tests de US-04-2: filtrar por estado y prioridad.
+const { filterTasks } = require('../public/js/tasks');
+
+function mixed() {
+  const store = createTaskStore();
+  store.add({ title: 'A', priority: 'alta', status: 'todo' });
+  store.add({ title: 'B', priority: 'baja', status: 'todo' });
+  store.add({ title: 'C', priority: 'alta', status: 'doing' });
+  store.add({ title: 'D', priority: 'media', status: 'done' });
+  return store.list();
+}
+
+test('sin filtros (o con valores vacíos) devuelve todas las tareas', () => {
+  assert.deepStrictEqual(titles(filterTasks(mixed())), ['A', 'B', 'C', 'D']);
+  assert.deepStrictEqual(titles(filterTasks(mixed(), { status: '', priority: '' })), ['A', 'B', 'C', 'D']);
+});
+
+test('filtra por estado', () => {
+  assert.deepStrictEqual(titles(filterTasks(mixed(), { status: 'todo' })), ['A', 'B']);
+});
+
+test('filtra por prioridad', () => {
+  assert.deepStrictEqual(titles(filterTasks(mixed(), { priority: 'alta' })), ['A', 'C']);
+});
+
+test('estado y prioridad se combinan (ambos deben cumplirse)', () => {
+  assert.deepStrictEqual(titles(filterTasks(mixed(), { status: 'todo', priority: 'alta' })), ['A']);
+  assert.deepStrictEqual(filterTasks(mixed(), { status: 'done', priority: 'alta' }), []);
+});

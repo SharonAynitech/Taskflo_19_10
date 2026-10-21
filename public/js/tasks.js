@@ -25,6 +25,14 @@
 
   var DUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+  // Máximo de tareas que se pueden seleccionar a la vez para una acción en lote (decisión del PO en UAT).
+  var MAX_SELECTION = 3;
+
+  // Recorta una lista de ids a las primeras MAX_SELECTION, sin cambiar su orden.
+  function limitSelection(ids) {
+    return ids.slice(0, MAX_SELECTION);
+  }
+
   function has(list, id) {
     for (var i = 0; i < list.length; i++) if (list[i].id === id) return true;
     return false;
@@ -185,7 +193,8 @@
     };
   }
 
-  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks, filterTasks: filterTasks, matchRange: matchRange };
+  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks, filterTasks: filterTasks, matchRange: matchRange,
+    MAX_SELECTION: MAX_SELECTION, limitSelection: limitSelection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TaskFlowTasks = api;
 })(typeof window !== 'undefined' ? window : this);

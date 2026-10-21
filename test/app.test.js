@@ -88,3 +88,10 @@ test('rutas desconocidas devuelven 404', async () => {
   const res = await fetch(`${base}/no-existe`);
   assert.strictEqual(res.status, 404);
 });
+
+test('GET / explica cómo arrastrar tarjetas entre columnas (US-03-2)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /Arrastra una tarjeta a otra columna para actualizar su estado\. Suelta fuera de cualquier columna y volverá a su lugar\./);
+  assert.match(html, /<\/svg>\s*Arrastra para mover\s*<\/span>/);
+  assert.match(html, /id="board-status"[^>]*aria-live="polite"/);
+});

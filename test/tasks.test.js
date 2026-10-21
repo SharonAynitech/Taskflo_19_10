@@ -146,3 +146,48 @@ test('remove elimina solo la tarea indicada', () => {
   assert.deepStrictEqual(store.remove(a.id), { ok: false, error: MESSAGES.notFound });
   assert.strictEqual(store.list().length, 1);
 });
+
+// Tests de US-04-1: ordenar la tabla por columna.
+const { sortTasks } = require('../public/js/tasks');
+
+function sample() {
+  const store = createTaskStore();
+  store.add({ title: 'Comprar pan', priority: 'baja', due: '2026-11-05' });
+  store.add({ title: 'abrir cuenta', priority: 'alta', status: 'done' });
+  store.add({ title: 'Llamar al banco', priority: 'media', status: 'doing', due: '2026-10-25' });
+  store.add({ title: 'Enviar informe', priority: 'alta', due: '2026-10-30' });
+  return store;
+}
+const titles = (list) => list.map((t) => t.title);
+
+test('sin columna de orden se listan por creación, aunque se hayan movido', () => {
+  const store = sample();
+  store.move(1, 'done');
+  assert.deepStrictEqual(titles(sortTasks(store.list())), ['Comprar pan', 'abrir cuenta', 'Llamar al banco', 'Enviar informe']);
+});
+
+test('por prioridad ascendente va alta primero y descendente baja primero; empates por creación', () => {
+  const list = sample().list();
+  assert.deepStrictEqual(titles(sortTasks(list, 'priority', 'asc')), ['abrir cuenta', 'Enviar informe', 'Llamar al banco', 'Comprar pan']);
+  assert.deepStrictEqual(titles(sortTasks(list, 'priority', 'desc')), ['Comprar pan', 'Llamar al banco', 'abrir cuenta', 'Enviar informe']);
+});
+
+test('por título ignora mayúsculas y acentos', () => {
+  assert.deepStrictEqual(titles(sortTasks(sample().list(), 'title', 'asc')), ['abrir cuenta', 'Comprar pan', 'Enviar informe', 'Llamar al banco']);
+});
+
+test('por estado sigue el orden de las columnas', () => {
+  assert.deepStrictEqual(titles(sortTasks(sample().list(), 'status', 'asc')), ['Comprar pan', 'Enviar informe', 'Llamar al banco', 'abrir cuenta']);
+});
+
+test('por fecha límite las tareas sin fecha van al final en ambos sentidos', () => {
+  const list = sample().list();
+  assert.deepStrictEqual(titles(sortTasks(list, 'due', 'asc')), ['Llamar al banco', 'Enviar informe', 'Comprar pan', 'abrir cuenta']);
+  assert.deepStrictEqual(titles(sortTasks(list, 'due', 'desc')), ['Comprar pan', 'Enviar informe', 'Llamar al banco', 'abrir cuenta']);
+});
+
+test('sortTasks no modifica la lista recibida', () => {
+  const list = sample().list();
+  sortTasks(list, 'priority', 'asc');
+  assert.deepStrictEqual(titles(list), ['Comprar pan', 'abrir cuenta', 'Llamar al banco', 'Enviar informe']);
+});

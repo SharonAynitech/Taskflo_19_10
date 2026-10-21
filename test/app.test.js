@@ -104,3 +104,15 @@ test('GET / incluye el modal de confirmación para eliminar (US-03-3)', async ()
   assert.match(html, /id="delete-cancel"[^>]*>Cancelar</);
   assert.match(html, /Cada tarjeta tiene acciones para editar o eliminar\. La eliminación pide confirmación explícita antes de ejecutarse\./);
 });
+
+test('GET / incluye las pestañas Tablero/Tabla y la tabla ordenable (US-04-1)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /role="tablist"/);
+  assert.match(html, /id="view-board-tab"[^>]*role="tab"[^>]*>Tablero</);
+  assert.match(html, /id="view-table-tab"[^>]*role="tab"[^>]*>Tabla</);
+  assert.match(html, /<table[^>]*data-testid="task-table"/);
+  assert.match(html, />Lista de tareas</);
+  for (const key of ['title', 'priority', 'status', 'due']) assert.match(html, new RegExp(`data-sort="${key}"`));
+  assert.match(html, /Sin tareas que coincidan con los filtros/);
+  assert.match(html, /Revisa todas tus tareas en lista y ordena por cualquier columna\./);
+});

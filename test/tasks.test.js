@@ -255,3 +255,31 @@ test('matchRange da la posición de la coincidencia en el título original', () 
   assert.strictEqual(matchRange('Comprar pan', 'xyz'), null);
   assert.strictEqual(matchRange('Comprar pan', '  '), null);
 });
+
+// Tests de US-04-4: cambiar el estado de varias tareas a la vez.
+test('moveMany mueve todas las tareas indicadas y devuelve cuántas cambiaron', () => {
+  const store = createTaskStore();
+  store.add({ title: 'A' });
+  store.add({ title: 'B', status: 'doing' });
+  store.add({ title: 'C' });
+  const r = store.moveMany([3, 1], 'done');
+  assert.deepStrictEqual(r, { ok: true, moved: 2 });
+  assert.deepStrictEqual(titles(store.byStatus('done')), ['A', 'C']);
+  assert.deepStrictEqual(titles(store.byStatus('todo')), []);
+  assert.deepStrictEqual(titles(store.byStatus('doing')), ['B']);
+});
+
+test('moveMany ignora las que ya están en ese estado y los ids inexistentes', () => {
+  const store = createTaskStore();
+  store.add({ title: 'A', status: 'done' });
+  store.add({ title: 'B' });
+  assert.deepStrictEqual(store.moveMany([1, 2, 99], 'done'), { ok: true, moved: 1 });
+  assert.deepStrictEqual(titles(store.byStatus('done')), ['A', 'B']);
+});
+
+test('moveMany con un estado inválido no cambia nada', () => {
+  const store = createTaskStore();
+  store.add({ title: 'A' });
+  assert.deepStrictEqual(store.moveMany([1], 'archivada'), { ok: false, error: MESSAGES.invalidStatus, field: 'status' });
+  assert.strictEqual(store.list()[0].status, 'todo');
+});

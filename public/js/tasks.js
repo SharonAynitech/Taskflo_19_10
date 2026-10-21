@@ -144,6 +144,14 @@
         setStatus(index, status);
         return { ok: true, task: copy(task) };
       },
+      // Cambia el estado de varias tareas a la vez. Se recorren en el orden actual para que conserven
+      // su orden relativo al final de la columna de destino. Los ids inexistentes se ignoran.
+      moveMany: function (ids, status) {
+        if (!has(STATUSES, status)) return { ok: false, error: MESSAGES.invalidStatus, field: 'status' };
+        var targets = tasks.filter(function (t) { return ids.indexOf(t.id) !== -1 && t.status !== status; });
+        targets.forEach(function (task) { setStatus(tasks.indexOf(task), status); });
+        return { ok: true, moved: targets.length };
+      },
       // Reemplaza los datos con las mismas reglas que al crear. Si cambia el estado, se comporta como move.
       update: function (id, input) {
         var index = indexOf(id);

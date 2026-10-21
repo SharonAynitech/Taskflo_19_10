@@ -134,3 +134,15 @@ test('GET / incluye la búsqueda por título (US-04-3)', async () => {
   assert.match(html, /<label[^>]*for="filter-search"[^>]*>Buscar tareas por título</);
   assert.match(html, /<kbd[^>]*>\/<\/kbd>/);
 });
+
+test('GET / incluye la selección múltiple y la barra de acciones en lote (US-04-4)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<input[^>]*type="checkbox"[^>]*id="select-all"/);
+  assert.match(html, /data-testid="batch-bar"[^>]*hidden/);
+  assert.match(html, /<span id="batch-count">0<\/span> <span id="batch-noun">seleccionadas<\/span>/);
+  assert.match(html, /<label for="batch-status">Cambiar estado a<\/label>/);
+  assert.match(html, /<option value="">Elegir estado…<\/option>/);
+  assert.match(html, /id="batch-apply"[^>]*>Aplicar</);
+  assert.match(html, /id="batch-clear"[^>]*>Deseleccionar todo</);
+  assert.match(html, /Usa las casillas para seleccionar varias tareas\./);
+});

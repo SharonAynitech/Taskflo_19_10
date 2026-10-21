@@ -350,7 +350,28 @@
     .table-head p { margin: 2px 0 0; font-size: 14px; color: var(--color-text-sub); }
     .table-wrap { overflow-x: auto; }
     /* En pantallas estrechas la tabla se desplaza dentro de su contenedor en lugar de partir las palabras */
-    .task-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px; overflow-wrap: normal; }
+    /* Barra de acciones en lote: aparece al seleccionar filas */
+    .batch-bar {
+      display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap;
+      padding: 10px 16px; background: var(--color-primary); color: var(--color-primary-fg);
+    }
+    .batch-count { margin: 0; font-size: 14px; font-weight: 600; }
+    .batch-count span { font-weight: 700; }
+    .batch-field { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+    .batch-field select {
+      height: 36px; min-width: 160px; padding: 0 8px;
+      font: inherit; color: var(--color-text);
+      background: var(--color-surface); border: 1px solid transparent; border-radius: var(--radius-md);
+    }
+    .batch-bar :focus-visible { outline-color: var(--color-primary-fg); }
+    .btn-light { background: var(--color-surface); color: var(--color-primary); }
+    .btn-light:hover:not(:disabled) { background: var(--color-primary-soft); }
+    .btn-ghost { margin-left: auto; background: transparent; color: var(--color-primary-fg); border-color: rgba(255, 255, 255, 0.6); }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.12); }
+    .col-select { width: 44px; }
+    .row-check { width: 18px; height: 18px; margin: 0; accent-color: var(--color-primary); cursor: pointer; vertical-align: middle; }
+    .task-table tbody tr.is-selected td { background: var(--color-primary-soft); }
+    .task-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; overflow-wrap: normal; }
     .task-table th {
       padding: 0 12px; height: 40px; text-align: left; white-space: nowrap;
       font-size: 13px; font-weight: 700; color: var(--color-text-sub);
@@ -359,7 +380,8 @@
     .task-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
     .task-table tbody tr:last-child td { border-bottom: 0; }
     .task-table tbody tr:nth-child(even) td { background: var(--color-surface-2); }
-    .task-table tbody tr.is-new td { background: var(--color-primary-soft); }
+    /* Última tarea creada o editada: franja a la izquierda, para no confundirla con una fila seleccionada */
+    .task-table tbody tr.is-new td:first-child { box-shadow: inset 3px 0 0 var(--color-primary); }
     .sort-btn {
       display: inline-flex; align-items: center; gap: 6px; height: 32px; margin: 0 -8px; padding: 0 8px;
       font: inherit; font-weight: 700; color: inherit;
@@ -561,7 +583,7 @@
           <h1 id="board-title" tabindex="-1">Mis tareas</h1>
           <p id="board-intro">Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.
             Cada tarjeta tiene acciones para editar o eliminar. La eliminación pide confirmación explícita antes de ejecutarse.</p>
-          <p id="table-intro" hidden>Revisa todas tus tareas en lista y ordena por cualquier columna.</p>
+          <p id="table-intro" hidden>Revisa todas tus tareas en lista y ordena por cualquier columna. Marca tareas y usa la barra de acciones para cambiar su estado en lote.</p>
         </div>
         <div class="view-tools">
           <span class="hint" id="drag-hint">
@@ -612,12 +634,27 @@
       <section class="table-panel" id="table-panel" role="tabpanel" aria-labelledby="view-table-tab" hidden>
         <div class="table-head">
           <h2 id="table-title">Lista de tareas</h2>
-          <p id="table-sort-desc">Ordenadas por creación.</p>
+          <p><span id="table-sort-desc">Ordenadas por creación.</span> Usa las casillas para seleccionar varias tareas.</p>
+        </div>
+        <div class="batch-bar" id="batch-bar" data-testid="batch-bar" role="region" aria-label="Acciones en lote" hidden>
+          <p class="batch-count" data-testid="batch-count"><span id="batch-count">0</span> <span id="batch-noun">seleccionadas</span></p>
+          <div class="batch-field">
+            <label for="batch-status">Cambiar estado a</label>
+            <select id="batch-status" data-testid="batch-status">
+              <option value="">Elegir estado…</option>
+              <option value="todo">Por hacer</option>
+              <option value="doing">En progreso</option>
+              <option value="done">Hecho</option>
+            </select>
+          </div>
+          <button class="btn btn-light btn-sm" type="button" id="batch-apply" disabled>Aplicar</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="batch-clear">Deseleccionar todo</button>
         </div>
         <div class="table-wrap">
           <table class="task-table" data-testid="task-table" aria-labelledby="table-title" aria-describedby="table-sort-desc">
             <thead>
               <tr>
+                <th scope="col" class="col-select"><input type="checkbox" class="row-check" id="select-all" data-testid="select-all" aria-label="Seleccionar todas las tareas visibles"></th>
                 <th scope="col" class="col-order">Orden</th>
                 <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="title">Título <span class="sort-icon" aria-hidden="true"></span></button></th>
                 <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="priority">Prioridad <span class="sort-icon" aria-hidden="true"></span></button></th>
@@ -1046,7 +1083,16 @@
         var tr = document.createElement('tr');
         tr.setAttribute('data-task-id', String(task.id));
         tr.setAttribute('data-testid', 'task-row');
-        if (task.id === highlightId) tr.className = 'is-new';
+        var isSelected = !!selected[task.id];
+        tr.className = isSelected ? 'is-selected' : task.id === highlightId ? 'is-new' : '';
+        var check = document.createElement('input');
+        check.type = 'checkbox';
+        check.className = 'row-check';
+        check.checked = isSelected;
+        check.setAttribute('data-testid', 'row-select');
+        check.setAttribute('aria-label', 'Seleccionar «' + task.title + '»');
+        check.addEventListener('change', function () { toggleSelected(task.id, check.checked); });
+        tr.appendChild(cell(check, 'col-select'));
         tr.appendChild(cell(String(index + 1), 'col-order'));
         var rowTitle = pill('row-title', 'row-title', '');
         highlightTitle(rowTitle, task.title);
@@ -1086,14 +1132,88 @@
           tr.className = 'empty-row';
           tr.setAttribute('data-testid', 'table-empty');
           var td = document.createElement('td');
-          td.colSpan = 6;
+          td.colSpan = 7;
           td.innerHTML = '<div class="empty-col">' + ICON_EMPTY + '<span>Sin tareas que coincidan con los filtros</span></div>';
           tr.appendChild(td);
           body.appendChild(tr);
-          return;
         }
+        // Solo se puede actuar sobre lo que se ve: la selección pierde las tareas eliminadas u ocultas por los filtros.
+        var visible = {};
+        tasks.forEach(function (task) { visible[task.id] = true; });
+        Object.keys(selected).forEach(function (id) { if (!visible[id]) delete selected[id]; });
         tasks.forEach(function (task, index) { body.appendChild(renderRow(task, index)); });
+        renderBatchBar(tasks.length);
       }
+
+      // ---------- Selección y acciones en lote ----------
+      var selected = {};  // id -> true, tareas marcadas en la tabla
+      var batchBar = byId('batch-bar');
+      var batchStatus = byId('batch-status');
+      var selectAll = byId('select-all');
+
+      function selectedIds() { return Object.keys(selected).map(Number); }
+
+      function renderBatchBar(visibleCount) {
+        var count = selectedIds().length;
+        byId('batch-count').textContent = String(count);
+        byId('batch-noun').textContent = count === 1 ? 'seleccionada' : 'seleccionadas';
+        batchBar.hidden = count === 0;
+        if (!count) batchStatus.value = '';
+        byId('batch-apply').disabled = !batchStatus.value;
+        selectAll.checked = visibleCount > 0 && count === visibleCount;
+        selectAll.indeterminate = count > 0 && count < visibleCount;
+        selectAll.disabled = visibleCount === 0;
+      }
+
+      function selectionMessage() {
+        var count = selectedIds().length;
+        return count ? count + (count === 1 ? ' seleccionada' : ' seleccionadas') : 'Ninguna tarea seleccionada';
+      }
+
+      // Marcar una casilla solo actualiza su fila y la barra, sin volver a pintar la tabla (la casilla conserva el foco).
+      function toggleSelected(id, on) {
+        if (on) selected[id] = true;
+        else delete selected[id];
+        var row = document.querySelector('#table-panel [data-task-id="' + id + '"]');
+        if (row) row.className = on ? 'is-selected' : '';
+        renderBatchBar(document.querySelectorAll('#table-panel [data-testid="task-row"]').length);
+        byId('board-status').textContent = selectionMessage();
+      }
+
+      selectAll.addEventListener('change', function () {
+        var on = selectAll.checked;
+        selected = {};
+        if (on) Tasks.filterTasks(currentStore().list(), filters).forEach(function (task) { selected[task.id] = true; });
+        renderTable();
+        selectAll.focus();
+        byId('board-status').textContent = selectionMessage();
+      });
+
+      batchStatus.addEventListener('change', function () { byId('batch-apply').disabled = !batchStatus.value; });
+
+      function clearSelection() {
+        selected = {};
+        renderTable();
+        selectAll.focus();
+      }
+
+      byId('batch-clear').addEventListener('click', function () {
+        clearSelection();
+        byId('board-status').textContent = 'Ninguna tarea seleccionada';
+      });
+
+      byId('batch-apply').addEventListener('click', function () {
+        var status = batchStatus.value;
+        var ids = selectedIds();
+        if (!status || !ids.length) return;
+        var result = currentStore().moveMany(ids, status);
+        if (!result.ok) return;
+        selected = {};
+        highlightId = null;
+        renderBoard();
+        selectAll.focus();
+        byId('board-status').textContent = (ids.length === 1 ? '1 tarea movida a ' : ids.length + ' tareas movidas a ') + statusLabel(status);
+      });
 
       // Primer clic en una columna: ascendente; clic de nuevo en la misma: invierte el sentido.
       Array.prototype.forEach.call(document.querySelectorAll('[data-sort]'), function (btn) {
@@ -1251,6 +1371,7 @@
           sortKey = null;
           sortDir = 'asc';
           filters = NO_FILTERS;
+          selected = {};
           setView('board', false);
           byId('board-status').textContent = '';
           renderBoard();

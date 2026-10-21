@@ -64,6 +64,14 @@
     return list.slice().sort(function (a, b) { return compare(a, b) || a.id - b.id; });
   }
 
+  // Devuelve las tareas que cumplen todos los filtros activos; un filtro vacío no restringe.
+  function filterTasks(list, filters) {
+    var f = filters || {};
+    return list.filter(function (t) {
+      return (!f.status || t.status === f.status) && (!f.priority || t.priority === f.priority);
+    });
+  }
+
   function createTaskStore() {
     var tasks = [];
     var nextId = 1;
@@ -138,7 +146,7 @@
     };
   }
 
-  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks };
+  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks, filterTasks: filterTasks };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TaskFlowTasks = api;
 })(typeof window !== 'undefined' ? window : this);

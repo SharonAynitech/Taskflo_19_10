@@ -116,3 +116,14 @@ test('GET / incluye las pestañas Tablero/Tabla y la tabla ordenable (US-04-1)',
   assert.match(html, /Sin tareas que coincidan con los filtros/);
   assert.match(html, /Revisa todas tus tareas en lista y ordena por cualquier columna\./);
 });
+
+test('GET / incluye los filtros por estado y prioridad (US-04-2)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<select[^>]*id="filter-status"/);
+  assert.match(html, /<select[^>]*id="filter-priority"/);
+  assert.match(html, /<option value="">Todos<\/option>/);
+  assert.match(html, /<option value="">Todas<\/option>/);
+  assert.match(html, /id="filter-clear"[^>]*>Limpiar filtros</);
+  assert.match(html, /data-testid="filter-summary"/);
+  assert.match(html, /Los filtros se aplican en la vista de tablero y en la de tabla\./);
+});

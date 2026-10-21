@@ -202,9 +202,19 @@
 
     /* ---------- Tablero ---------- */
     .board-main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-    .board-head { margin-bottom: 20px; }
+    .board-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
     .board-head h1 { margin: 0 0 4px; font-size: 24px; font-weight: 700; line-height: 1.25; }
-    .board-head p { margin: 0; color: var(--color-text-sub); }
+    .board-head p { margin: 0; max-width: 64ch; color: var(--color-text-sub); }
+    .hint {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      background: var(--color-surface); border: 1px solid var(--border-color);
+      font-size: 12px; font-weight: 600; color: var(--color-text-sub); white-space: nowrap;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
 
     .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
     .column {
@@ -213,7 +223,9 @@
       background: var(--color-surface-2);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);
+      transition: border-color var(--transition-fast), background-color var(--transition-fast);
     }
+    .column.is-drop-target { border-color: var(--color-primary); background: var(--color-primary-soft); }
     .column-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 4px 0; }
     .column-head h2 { margin: 0; font-size: 15px; font-weight: 700; }
     .count {
@@ -236,6 +248,15 @@
     }
     .task-card:hover { border-color: #C7D2FE; }
     .task-card.is-new { border-color: var(--color-primary); }
+    .task-card[draggable="true"] { cursor: grab; }
+    .task-card.is-dragging { opacity: 0.5; border-style: dashed; border-color: var(--color-primary); }
+    .move-select {
+      height: 28px; margin-left: auto; padding: 0 4px;
+      font: inherit; font-size: 12px; font-weight: 600; color: var(--color-text-sub);
+      background: var(--color-surface); border: 1px solid var(--border-color); border-radius: 6px;
+      cursor: pointer;
+    }
+    .move-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
     .task-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--color-text); }
     .task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--color-text-sub); }
     .badge { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
@@ -417,9 +438,16 @@
 
     <main class="board-main">
       <div class="board-head">
-        <h1 id="board-title" tabindex="-1">Mi tablero</h1>
-        <p>Tus tareas organizadas por estado.</p>
+        <div>
+          <h1 id="board-title" tabindex="-1">Mi tablero</h1>
+          <p>Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.</p>
+        </div>
+        <span class="hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/></svg>
+          Arrastra para mover
+        </span>
       </div>
+      <p class="sr-only" id="board-status" role="status" aria-live="polite"></p>
 
       <div class="board" data-testid="board">
         <section class="column" data-column="todo" aria-labelledby="col-todo">
@@ -534,7 +562,8 @@
       // ---------- Tablero ----------
       var Tasks = window.TaskFlowTasks;
       var storesByUser = {};   // tareas en memoria por cuenta; se pierden al recargar
-      var lastCreatedId = null;
+      var highlightId = null;  // última tarea creada o movida: se resalta su borde
+      var dragId = null;       // tarea que se está arrastrando
       var ICON_EMPTY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
       var ICON_DUE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
 
@@ -549,11 +578,50 @@
         return id;
       }
 
+      function statusLabel(id) {
+        for (var i = 0; i < Tasks.STATUSES.length; i++) if (Tasks.STATUSES[i].id === id) return Tasks.STATUSES[i].label;
+        return id;
+      }
+
+      function clearDropTargets() {
+        Array.prototype.forEach.call(document.querySelectorAll('.column.is-drop-target'), function (col) {
+          col.classList.remove('is-drop-target');
+        });
+      }
+
+      // Mueve la tarea y vuelve a pintar el tablero. Soltar en su misma columna no cambia nada.
+      function moveTask(id, status, focusSelect) {
+        var before = currentStore().list().filter(function (t) { return t.id === id; })[0];
+        if (!before || before.status === status) return;
+        var result = currentStore().move(id, status);
+        if (!result.ok) return;
+        highlightId = id;
+        renderBoard();
+        byId('board-status').textContent = 'Tarea movida a ' + statusLabel(status);
+        if (focusSelect) {
+          var select = document.querySelector('[data-task-id="' + id + '"] [data-testid="task-move"]');
+          if (select) select.focus();
+        }
+      }
+
       function renderCard(task) {
         var li = document.createElement('li');
-        li.className = 'task-card' + (task.id === lastCreatedId ? ' is-new' : '');
+        li.className = 'task-card' + (task.id === highlightId ? ' is-new' : '');
         li.setAttribute('data-task-id', String(task.id));
         li.setAttribute('data-testid', 'task-card');
+        li.draggable = true;
+        li.addEventListener('dragstart', function (event) {
+          dragId = task.id;
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', String(task.id));
+          li.classList.add('is-dragging');
+        });
+        // Sin drop válido (fuera de las columnas o Escape) la tarjeta se queda donde estaba.
+        li.addEventListener('dragend', function () {
+          dragId = null;
+          li.classList.remove('is-dragging');
+          clearDropTargets();
+        });
 
         var title = document.createElement('p');
         title.className = 'task-title';
@@ -578,9 +646,42 @@
           due.appendChild(time);
           meta.appendChild(due);
         }
+        // Alternativa al arrastre para teclado y lectores de pantalla
+        var move = document.createElement('select');
+        move.className = 'move-select';
+        move.setAttribute('data-testid', 'task-move');
+        move.setAttribute('aria-label', 'Mover «' + task.title + '» a otra columna');
+        Tasks.STATUSES.forEach(function (status) {
+          var option = document.createElement('option');
+          option.value = status.id;
+          option.textContent = status.label;
+          option.selected = status.id === task.status;
+          move.appendChild(option);
+        });
+        move.addEventListener('change', function () { moveTask(task.id, move.value, true); });
+        meta.appendChild(move);
         li.appendChild(meta);
         return li;
       }
+
+      Array.prototype.forEach.call(document.querySelectorAll('.column'), function (column) {
+        column.addEventListener('dragover', function (event) {
+          if (dragId === null) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+          column.classList.add('is-drop-target');
+        });
+        column.addEventListener('dragleave', function (event) {
+          if (!column.contains(event.relatedTarget)) column.classList.remove('is-drop-target');
+        });
+        column.addEventListener('drop', function (event) {
+          event.preventDefault();
+          var id = dragId;
+          dragId = null;
+          clearDropTargets();
+          if (id !== null) moveTask(id, column.getAttribute('data-column'), false);
+        });
+      });
 
       function renderBoard() {
         var store = currentStore();
@@ -640,7 +741,7 @@
           taskTitle.focus();
           return;
         }
-        lastCreatedId = result.task.id;
+        highlightId = result.task.id;
         taskDialog.close();
         renderBoard();
       });
@@ -653,7 +754,8 @@
           byId('user-email').textContent = user;
           byId('user-avatar').textContent = user.charAt(0).toUpperCase();
           byId('session-pill').textContent = entry === 'register' ? 'Cuenta creada' : 'Sesión iniciada';
-          lastCreatedId = null;
+          highlightId = null;
+          byId('board-status').textContent = '';
           renderBoard();
           byId('board-title').focus();
         }

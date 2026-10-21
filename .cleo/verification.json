@@ -145,6 +145,49 @@
           ]
         }
       ]
+    },
+    "US-03-2": {
+      "criteria_digest": "74a9dbad777e1e7f5f464402530e62504bfaaee3661feb49165e98d145ebd9f2",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Preparar informe mensual" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "count", "selector": "[data-column=todo] [data-testid=task-card]", "value": 1 },
+            { "action": "select", "selector": "[data-column=todo] [data-testid=task-move]", "value": "doing" },
+            { "action": "count", "selector": "[data-column=todo] [data-testid=task-card]", "value": 0 },
+            { "action": "count", "selector": "[data-column=doing] [data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-count=doing]", "value": "1" },
+            { "action": "text", "selector": "[data-column=doing] [data-testid=task-card]", "value": "Preparar informe mensual" }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Revisar correo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "count", "selector": "[data-column=doing] [data-testid=task-card]", "value": 0 },
+            { "action": "count", "selector": "[data-column=done] [data-testid=task-card]", "value": 0 },
+            { "action": "count", "selector": "[data-column=todo] [data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-column=todo] [data-testid=task-card]", "value": "Revisar correo" }
+          ]
+        }
+      ]
     }
   }
 }

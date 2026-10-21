@@ -20,6 +20,7 @@
     invalidPriority: 'La prioridad no es válida.',
     invalidStatus: 'El estado no es válido.',
     invalidDue: 'La fecha límite no es válida.',
+    notFound: 'La tarea no existe.',
   };
 
   var DUE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -63,6 +64,20 @@
         if (!v.ok) return v;
         var task = { id: nextId++, title: v.value.title, priority: v.value.priority, status: v.value.status, due: v.value.due };
         tasks.push(task);
+        return { ok: true, task: copy(task) };
+      },
+      // Cambia el estado; la tarea pasa al final de la columna de destino. Misma columna: sin cambios.
+      move: function (id, status) {
+        if (!has(STATUSES, status)) return { ok: false, error: MESSAGES.invalidStatus, field: 'status' };
+        var index = -1;
+        for (var i = 0; i < tasks.length; i++) if (tasks[i].id === id) index = i;
+        if (index === -1) return { ok: false, error: MESSAGES.notFound };
+        var task = tasks[index];
+        if (task.status !== status) {
+          tasks.splice(index, 1);
+          task.status = status;
+          tasks.push(task);
+        }
         return { ok: true, task: copy(task) };
       },
       list: function () {

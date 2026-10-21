@@ -70,3 +70,38 @@ test('formatDue muestra la fecha local sin desfase de zona horaria', () => {
   assert.match(formatDue('2026-10-25'), /^25 .*oct.* 2026$/);
   assert.match(formatDue('2026-01-01'), /^1 .*ene.* 2026$|^01 .*ene.* 2026$/);
 });
+
+// Tests de US-03-2: mover una tarea a otra columna.
+test('move cambia el estado y la tarea aparece en la nueva columna', () => {
+  const store = createTaskStore();
+  const { task } = store.add({ title: 'A', priority: 'alta', due: '2026-10-25' });
+  const r = store.move(task.id, 'doing');
+  assert.deepStrictEqual(r, { ok: true, task: { id: task.id, title: 'A', priority: 'alta', status: 'doing', due: '2026-10-25' } });
+  assert.deepStrictEqual(store.byStatus('todo'), []);
+  assert.deepStrictEqual(store.byStatus('doing').map((t) => t.title), ['A']);
+});
+
+test('la tarea movida queda al final de la columna de destino', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'A' }).task;
+  store.add({ title: 'B', status: 'doing' });
+  store.add({ title: 'C', status: 'doing' });
+  store.move(a.id, 'doing');
+  assert.deepStrictEqual(store.byStatus('doing').map((t) => t.title), ['B', 'C', 'A']);
+});
+
+test('mover a la misma columna no cambia el orden', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'A' }).task;
+  store.add({ title: 'B' });
+  assert.strictEqual(store.move(a.id, 'todo').ok, true);
+  assert.deepStrictEqual(store.byStatus('todo').map((t) => t.title), ['A', 'B']);
+});
+
+test('mover a un estado inválido o una tarea inexistente falla sin cambios', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'A' }).task;
+  assert.deepStrictEqual(store.move(a.id, 'archivada'), { ok: false, error: MESSAGES.invalidStatus, field: 'status' });
+  assert.deepStrictEqual(store.move(99, 'doing'), { ok: false, error: MESSAGES.notFound });
+  assert.deepStrictEqual(store.list().map((t) => t.status), ['todo']);
+});

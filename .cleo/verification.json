@@ -517,6 +517,115 @@
           ]
         }
       ]
+    },
+    "US-04-3": {
+      "criteria_digest": "eacb5078f69ae0c4e4e2e28a42785ca2eec61886c0af64fee6d435efb47ee919",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Comprar pan" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "media" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "todo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Lavar auto" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "media" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "todo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 2 },
+            { "action": "fill", "selector": "#filter-search", "value": "pan" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-testid=task-card] .task-title", "value": "Comprar pan" },
+            { "action": "text", "selector": "[data-testid=filter-summary]", "value": "Mostrando 1 de 2 tareas" },
+            { "action": "click", "selector": "#view-table-tab" },
+            { "action": "visible", "selector": "[data-testid=task-table]" },
+            { "action": "count", "selector": "[data-testid=task-row]", "value": 1 },
+            { "action": "text", "selector": "[data-testid=task-row] [data-testid=row-title]", "value": "Comprar pan" }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Comprar pan" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "media" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "todo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Lavar auto" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "media" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "todo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "fill", "selector": "#filter-search", "value": "pan" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "fill", "selector": "#filter-search", "value": "PAN" },
+            { "action": "value", "selector": "#filter-search", "value": "PAN" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-testid=task-card] .task-title", "value": "Comprar pan" },
+            { "action": "click", "selector": "#view-table-tab" },
+            { "action": "visible", "selector": "[data-testid=task-table]" },
+            { "action": "count", "selector": "[data-testid=task-row]", "value": 1 },
+            { "action": "text", "selector": "[data-testid=task-row] [data-testid=row-title]", "value": "Comprar pan" }
+          ]
+        },
+        {
+          "criterion_index": 2,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Comprar pan" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "alta" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "todo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Lavar auto" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "baja" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "todo" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Pagar luz" },
+            { "action": "select", "selector": "#task-form select[name=priority]", "value": "alta" },
+            { "action": "select", "selector": "#task-form select[name=status]", "value": "doing" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "select", "selector": "#filter-priority", "value": "alta" },
+            { "action": "fill", "selector": "#filter-search", "value": "pan" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-testid=task-card] .task-title", "value": "Comprar pan" },
+            { "action": "fill", "selector": "#filter-search", "value": "" },
+            { "action": "value", "selector": "#filter-priority", "value": "alta" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 2 },
+            { "action": "text", "selector": "[data-column=todo] [data-testid=task-card] .task-title", "value": "Comprar pan" },
+            { "action": "text", "selector": "[data-column=doing] [data-testid=task-card] .task-title", "value": "Pagar luz" },
+            { "action": "text", "selector": "[data-testid=filter-summary]", "value": "Mostrando 2 de 3 tareas" },
+            { "action": "click", "selector": "#view-table-tab" },
+            { "action": "visible", "selector": "[data-testid=task-table]" },
+            { "action": "count", "selector": "[data-testid=task-row]", "value": 2 }
+          ]
+        }
+      ]
     }
   }
 }

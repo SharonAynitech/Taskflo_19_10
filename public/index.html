@@ -311,6 +311,27 @@
     }
     .filter-field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
     .filter-field select.is-active { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .search-field {
+      position: relative; display: inline-flex; align-items: center;
+      flex: 1 1 240px; max-width: 320px; color: var(--color-text-sub);
+    }
+    .search-field svg { position: absolute; left: 10px; pointer-events: none; }
+    .search-field input {
+      width: 100%; height: 36px; padding: 0 36px 0 34px;
+      font: inherit; font-size: 14px; color: var(--color-text);
+      background: var(--color-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+    }
+    .search-field input::placeholder { color: #6B7280; }
+    .search-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .search-field input.is-active { border-color: var(--color-primary); }
+    .search-field input:focus + .kbd, .search-field input.is-active + .kbd { display: none; }
+    .kbd {
+      position: absolute; right: 8px; padding: 0 6px; min-width: 20px; text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 18px;
+      color: var(--color-text-sub); background: var(--color-surface-2);
+      border: 1px solid var(--border-color); border-radius: 4px; pointer-events: none;
+    }
+    mark { padding: 0 1px; border-radius: 2px; background: #FEF3C7; color: inherit; }
     .filter-summary { margin: 0 0 0 auto; font-size: 14px; color: var(--color-text-sub); }
     .filter-summary strong { color: var(--color-text); }
     .btn-sm { height: 36px; padding: 0 12px; font-size: 14px; }
@@ -399,7 +420,7 @@
       .topbar { padding: 12px 16px; }
       .user-email, .avatar { display: none; }
       .board-main { padding: 16px; }
-      .filter-field { flex: 1 1 100%; }
+      .filter-field, .search-field { flex: 1 1 100%; max-width: none; }
       .filter-field label { min-width: 72px; }
       .filter-field select { flex: 1; min-width: 0; }
       .filter-summary { margin-left: 0; }
@@ -558,6 +579,12 @@
       <section class="filter-bar" aria-labelledby="filters-title" aria-describedby="filters-help">
         <h2 class="sr-only" id="filters-title">Filtros</h2>
         <div class="filter-controls">
+          <div class="search-field">
+            <label class="sr-only" for="filter-search">Buscar tareas por título</label>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="filter-search" type="search" data-testid="filter-search" placeholder="Buscar por título" autocomplete="off" spellcheck="false" aria-keyshortcuts="/">
+            <kbd class="kbd" aria-hidden="true">/</kbd>
+          </div>
           <div class="filter-field">
             <label for="filter-status">Estado</label>
             <select id="filter-status" data-testid="filter-status">
@@ -579,7 +606,7 @@
           <p class="filter-summary" id="filter-summary" data-testid="filter-summary">Mostrando <strong id="filter-shown">0</strong> de <span id="filter-total">0</span> tareas</p>
           <button class="btn btn-secondary btn-sm" type="button" id="filter-clear" disabled>Limpiar filtros</button>
         </div>
-        <p class="filter-help" id="filters-help">Usa los menús desplegables para filtrar por estado y prioridad. Los filtros se aplican en la vista de tablero y en la de tabla.</p>
+        <p class="filter-help" id="filters-help">Busca por título (pulsa / para ir a la búsqueda) y usa los menús desplegables para filtrar por estado y prioridad. Los filtros se aplican en la vista de tablero y en la de tabla.</p>
       </section>
 
       <section class="table-panel" id="table-panel" role="tabpanel" aria-labelledby="view-table-tab" hidden>
@@ -809,7 +836,7 @@
         head.className = 'task-head';
         var title = document.createElement('p');
         title.className = 'task-title';
-        title.textContent = task.title;
+        highlightTitle(title, task.title);
         head.appendChild(title);
         var actions = document.createElement('div');
         actions.className = 'card-actions';
@@ -874,22 +901,46 @@
       });
 
       // ---------- Filtros ----------
-      var filters = { status: '', priority: '' };  // '' = sin filtrar; se aplican al tablero y a la tabla
+      var NO_FILTERS = { status: '', priority: '', query: '' };
+      var filters = NO_FILTERS;  // '' = sin filtrar; se aplican al tablero y a la tabla
+      var filterSearch = byId('filter-search');
       var filterStatus = byId('filter-status');
       var filterPriority = byId('filter-priority');
+      var announceTimer = null;
 
-      function filtersActive() { return !!(filters.status || filters.priority); }
+      function filtersActive() { return !!(filters.status || filters.priority || filters.query.trim()); }
       function matchesFilters(task) { return Tasks.filterTasks([task], filters).length === 1; }
+
+      function withFilter(key, value) {
+        var next = { status: filters.status, priority: filters.priority, query: filters.query };
+        next[key] = value;
+        return next;
+      }
 
       function renderFilters() {
         var all = currentStore().list();
         byId('filter-shown').textContent = String(Tasks.filterTasks(all, filters).length);
         byId('filter-total').textContent = String(all.length);
         byId('filter-clear').disabled = !filtersActive();
+        // Solo se reescribe el campo si cambió desde fuera, para no mover el cursor mientras se escribe
+        if (filterSearch.value !== filters.query) filterSearch.value = filters.query;
         filterStatus.value = filters.status;
         filterPriority.value = filters.priority;
+        filterSearch.classList.toggle('is-active', !!filters.query.trim());
         filterStatus.classList.toggle('is-active', !!filters.status);
         filterPriority.classList.toggle('is-active', !!filters.priority);
+      }
+
+      // Título con la coincidencia de la búsqueda resaltada en <mark>; se construye con nodos de texto.
+      function highlightTitle(el, title) {
+        el.textContent = '';
+        var range = Tasks.matchRange(title, filters.query);
+        if (!range) { el.textContent = title; return; }
+        var mark = document.createElement('mark');
+        mark.textContent = title.slice(range[0], range[1]);
+        el.appendChild(document.createTextNode(title.slice(0, range[0])));
+        el.appendChild(mark);
+        el.appendChild(document.createTextNode(title.slice(range[1])));
       }
 
       // Aviso para cuando una tarea guardada o movida deja de verse por los filtros activos.
@@ -897,18 +948,38 @@
 
       function filterSummary() { return byId('filter-summary').textContent.replace(/\s+/g, ' ').trim(); }
 
-      function applyFilters(next) {
+      // El resultado se pinta al instante; el anuncio espera a que se deje de escribir para no saturar al lector de pantalla.
+      function applyFilters(next, delayAnnounce) {
         filters = next;
         renderBoard();
-        byId('board-status').textContent = filterSummary();
+        clearTimeout(announceTimer);
+        if (delayAnnounce) announceTimer = setTimeout(function () { byId('board-status').textContent = filterSummary(); }, 400);
+        else byId('board-status').textContent = filterSummary();
       }
 
-      filterStatus.addEventListener('change', function () { applyFilters({ status: filterStatus.value, priority: filters.priority }); });
-      filterPriority.addEventListener('change', function () { applyFilters({ status: filters.status, priority: filterPriority.value }); });
-      // El botón se desactiva al limpiar: el foco pasa al primer filtro para no perderse.
+      filterSearch.addEventListener('input', function () { applyFilters(withFilter('query', filterSearch.value), true); });
+      // Escape vacía la búsqueda sin tocar los demás filtros
+      filterSearch.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || !filterSearch.value) return;
+        event.preventDefault();
+        applyFilters(withFilter('query', ''), false);
+      });
+      filterStatus.addEventListener('change', function () { applyFilters(withFilter('status', filterStatus.value), false); });
+      filterPriority.addEventListener('change', function () { applyFilters(withFilter('priority', filterPriority.value), false); });
+      // El botón se desactiva al limpiar: el foco pasa a la búsqueda para no perderse.
       byId('filter-clear').addEventListener('click', function () {
-        applyFilters({ status: '', priority: '' });
-        filterStatus.focus();
+        applyFilters(NO_FILTERS, false);
+        filterSearch.focus();
+      });
+
+      // Atajo '/': lleva a la búsqueda salvo que se esté escribiendo o haya un modal abierto.
+      document.addEventListener('keydown', function (event) {
+        if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey || appView.hidden) return;
+        var target = event.target;
+        if (target.closest('input, select, textarea, dialog') || document.querySelector('dialog[open]')) return;
+        event.preventDefault();
+        filterSearch.focus();
+        filterSearch.select();
       });
 
       function renderBoard() {
@@ -977,7 +1048,9 @@
         tr.setAttribute('data-testid', 'task-row');
         if (task.id === highlightId) tr.className = 'is-new';
         tr.appendChild(cell(String(index + 1), 'col-order'));
-        tr.appendChild(cell(pill('row-title', 'row-title', task.title)));
+        var rowTitle = pill('row-title', 'row-title', '');
+        highlightTitle(rowTitle, task.title);
+        tr.appendChild(cell(rowTitle));
         tr.appendChild(cell(pill('badge badge-' + task.priority, 'row-priority', priorityLabel(task.priority))));
         tr.appendChild(cell(pill('status-pill status-' + task.status, 'row-status', statusLabel(task.status))));
         var due;
@@ -1177,7 +1250,7 @@
           highlightId = null;
           sortKey = null;
           sortDir = 'asc';
-          filters = { status: '', priority: '' };
+          filters = NO_FILTERS;
           setView('board', false);
           byId('board-status').textContent = '';
           renderBoard();

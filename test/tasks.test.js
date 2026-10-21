@@ -221,3 +221,37 @@ test('estado y prioridad se combinan (ambos deben cumplirse)', () => {
   assert.deepStrictEqual(titles(filterTasks(mixed(), { status: 'todo', priority: 'alta' })), ['A']);
   assert.deepStrictEqual(filterTasks(mixed(), { status: 'done', priority: 'alta' }), []);
 });
+
+// Tests de US-04-3: buscar por título.
+const { matchRange } = require('../public/js/tasks');
+
+function shopping() {
+  const store = createTaskStore();
+  store.add({ title: 'Comprar pan', priority: 'baja' });
+  store.add({ title: 'Lavar auto', priority: 'alta', status: 'doing' });
+  store.add({ title: 'Pagar teléfono', priority: 'alta' });
+  return store.list();
+}
+
+test('la búsqueda filtra por título', () => {
+  assert.deepStrictEqual(titles(filterTasks(shopping(), { query: 'pan' })), ['Comprar pan']);
+});
+
+test('la búsqueda no distingue mayúsculas, acentos ni espacios en los extremos', () => {
+  assert.deepStrictEqual(titles(filterTasks(shopping(), { query: 'PAN' })), ['Comprar pan']);
+  assert.deepStrictEqual(titles(filterTasks(shopping(), { query: '  Telefono ' })), ['Pagar teléfono']);
+});
+
+test('una búsqueda vacía no restringe y se combina con los demás filtros', () => {
+  assert.strictEqual(filterTasks(shopping(), { query: '   ' }).length, 3);
+  assert.deepStrictEqual(titles(filterTasks(shopping(), { query: 'ar', priority: 'alta' })), ['Lavar auto', 'Pagar teléfono']);
+  assert.deepStrictEqual(titles(filterTasks(shopping(), { query: 'ar', priority: 'alta', status: 'todo' })), ['Pagar teléfono']);
+  assert.deepStrictEqual(filterTasks(shopping(), { query: 'xyz' }), []);
+});
+
+test('matchRange da la posición de la coincidencia en el título original', () => {
+  assert.deepStrictEqual(matchRange('Comprar pan', 'PAN'), [8, 11]);
+  assert.deepStrictEqual(matchRange('Pagar teléfono', 'telefono'), [6, 14]);
+  assert.strictEqual(matchRange('Comprar pan', 'xyz'), null);
+  assert.strictEqual(matchRange('Comprar pan', '  '), null);
+});

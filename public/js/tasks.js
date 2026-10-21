@@ -64,11 +64,36 @@
     return list.slice().sort(function (a, b) { return compare(a, b) || a.id - b.id; });
   }
 
-  // Devuelve las tareas que cumplen todos los filtros activos; un filtro vacío no restringe.
+  // Minúsculas y sin acentos, carácter a carácter, para comparar textos al buscar.
+  function fold(ch) {
+    return ch.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+
+  // [inicio, fin) de la primera coincidencia de 'query' en 'title' (sin distinguir mayúsculas ni acentos), o null.
+  // Los índices se refieren al título original para poder resaltar la coincidencia.
+  function matchRange(title, query) {
+    var q = Array.prototype.map.call(String(query || '').trim(), fold).join('');
+    if (!q) return null;
+    var folded = '';
+    var starts = [];  // starts[i]: índice en 'title' del carácter que generó folded[i]
+    for (var i = 0; i < title.length; i++) {
+      var f = fold(title.charAt(i));
+      for (var j = 0; j < f.length; j++) starts.push(i);
+      folded += f;
+    }
+    var at = folded.indexOf(q);
+    if (at === -1) return null;
+    return [starts[at], starts[at + q.length - 1] + 1];
+  }
+
+  // Devuelve las tareas que cumplen todos los filtros activos (estado, prioridad y búsqueda por título);
+  // un filtro vacío no restringe.
   function filterTasks(list, filters) {
     var f = filters || {};
+    var query = String(f.query || '').trim();
     return list.filter(function (t) {
-      return (!f.status || t.status === f.status) && (!f.priority || t.priority === f.priority);
+      return (!f.status || t.status === f.status) && (!f.priority || t.priority === f.priority) &&
+        (!query || matchRange(t.title, query) !== null);
     });
   }
 
@@ -146,7 +171,7 @@
     };
   }
 
-  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks, filterTasks: filterTasks };
+  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks, filterTasks: filterTasks, matchRange: matchRange };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TaskFlowTasks = api;
 })(typeof window !== 'undefined' ? window : this);

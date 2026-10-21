@@ -127,3 +127,10 @@ test('GET / incluye los filtros por estado y prioridad (US-04-2)', async () => {
   assert.match(html, /data-testid="filter-summary"/);
   assert.match(html, /Los filtros se aplican en la vista de tablero y en la de tabla\./);
 });
+
+test('GET / incluye la búsqueda por título (US-04-3)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<input[^>]*id="filter-search"[^>]*type="search"/);
+  assert.match(html, /<label[^>]*for="filter-search"[^>]*>Buscar tareas por título</);
+  assert.match(html, /<kbd[^>]*>\/<\/kbd>/);
+});

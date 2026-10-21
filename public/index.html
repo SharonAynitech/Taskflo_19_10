@@ -366,6 +366,14 @@
     .batch-bar :focus-visible { outline-color: var(--color-primary-fg); }
     .btn-light { background: var(--color-surface); color: var(--color-primary); }
     .btn-light:hover:not(:disabled) { background: var(--color-primary-soft); }
+    .btn-light-danger { background: var(--color-surface); color: #B91C1C; }
+    .btn-light-danger:hover { background: var(--color-error-bg); }
+    .batch-delete-list {
+      list-style: none; margin: 0 0 16px; padding: 0; max-height: 200px; overflow-y: auto;
+      border: 1px solid var(--border-color); border-radius: var(--radius-md);
+    }
+    .batch-delete-list li { padding: 8px 12px; font-weight: 600; border-bottom: 1px solid var(--border-color); }
+    .batch-delete-list li:last-child { border-bottom: 0; }
     .btn-ghost { margin-left: auto; background: transparent; color: var(--color-primary-fg); border-color: rgba(255, 255, 255, 0.6); }
     .btn-ghost:hover { background: rgba(255, 255, 255, 0.12); }
     .col-select { width: 44px; }
@@ -583,7 +591,7 @@
           <h1 id="board-title" tabindex="-1">Mis tareas</h1>
           <p id="board-intro">Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.
             Cada tarjeta tiene acciones para editar o eliminar. La eliminación pide confirmación explícita antes de ejecutarse.</p>
-          <p id="table-intro" hidden>Revisa todas tus tareas en lista y ordena por cualquier columna. Marca tareas y usa la barra de acciones para cambiar su estado en lote.</p>
+          <p id="table-intro" hidden>Revisa todas tus tareas en lista y ordena por cualquier columna. Marca tareas y usa la barra de acciones para cambiar su estado o eliminarlas en lote.</p>
         </div>
         <div class="view-tools">
           <span class="hint" id="drag-hint">
@@ -648,6 +656,10 @@
             </select>
           </div>
           <button class="btn btn-light btn-sm" type="button" id="batch-apply" disabled>Aplicar</button>
+          <button class="btn btn-light-danger btn-sm" type="button" id="batch-delete" data-testid="batch-delete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+            Eliminar
+          </button>
           <button class="btn btn-ghost btn-sm" type="button" id="batch-clear">Deseleccionar todo</button>
         </div>
         <div class="table-wrap">
@@ -724,6 +736,19 @@
         <button class="btn btn-primary" type="submit">Guardar tarea</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Confirmación de eliminación en lote -->
+  <dialog class="modal" id="batch-delete-dialog" data-testid="batch-delete-dialog" aria-labelledby="batch-delete-title" aria-describedby="batch-delete-text">
+    <div class="modal-body">
+      <h2 id="batch-delete-title">¿Eliminar 0 tareas?</h2>
+      <p class="subtitle" id="batch-delete-text">Se eliminarán de forma permanente las tareas seleccionadas. Esta acción no se puede deshacer.</p>
+      <ul class="batch-delete-list" id="batch-delete-list" data-testid="batch-delete-list"></ul>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="batch-delete-cancel">Cancelar</button>
+        <button class="btn btn-danger" type="button" id="batch-delete-confirm">Confirmar</button>
+      </div>
+    </div>
   </dialog>
 
   <!-- Confirmación de eliminación -->
@@ -1196,6 +1221,46 @@
         renderTable();
         selectAll.focus();
       }
+
+      // ---------- Eliminación en lote ----------
+      var batchDeleteDialog = byId('batch-delete-dialog');
+      var batchDeleting = false;  // true mientras se confirma: al cerrar se sabe si se eliminó o se canceló
+
+      function tasksLabel(count) { return count === 1 ? '1 tarea' : count + ' tareas'; }
+
+      byId('batch-delete').addEventListener('click', function () {
+        var ids = selectedIds();
+        if (!ids.length) return;
+        // Las tareas se listan en el mismo orden que la tabla
+        var chosen = Tasks.sortTasks(currentStore().list(), sortKey, sortDir).filter(function (t) { return selected[t.id]; });
+        byId('batch-delete-title').textContent = '¿Eliminar ' + tasksLabel(chosen.length) + '?';
+        var list = byId('batch-delete-list');
+        list.textContent = '';
+        chosen.forEach(function (task) {
+          var li = document.createElement('li');
+          li.textContent = task.title;
+          list.appendChild(li);
+        });
+        batchDeleting = false;
+        batchDeleteDialog.showModal();
+        byId('batch-delete-cancel').focus();
+      });
+
+      byId('batch-delete-cancel').addEventListener('click', function () { batchDeleteDialog.close(); });
+      byId('batch-delete-confirm').addEventListener('click', function () {
+        var ids = selectedIds();
+        var result = currentStore().removeMany(ids);
+        batchDeleting = true;
+        selected = {};
+        batchDeleteDialog.close();
+        renderBoard();
+        (selectAll.disabled ? byId('board-title') : selectAll).focus();
+        byId('board-status').textContent = result.removed === 1 ? '1 tarea eliminada' : result.removed + ' tareas eliminadas';
+      });
+      // Cancelar o Escape: la selección se conserva y el foco vuelve al botón Eliminar de la barra.
+      batchDeleteDialog.addEventListener('close', function () {
+        if (!batchDeleting) restoreFocus(batchDeleteDialog, function () { return byId('batch-delete'); });
+      });
 
       byId('batch-clear').addEventListener('click', function () {
         clearSelection();

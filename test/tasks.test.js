@@ -283,3 +283,21 @@ test('moveMany con un estado inválido no cambia nada', () => {
   assert.deepStrictEqual(store.moveMany([1], 'archivada'), { ok: false, error: MESSAGES.invalidStatus, field: 'status' });
   assert.strictEqual(store.list()[0].status, 'todo');
 });
+
+// Tests de US-04-5: eliminar varias tareas a la vez.
+test('removeMany elimina solo las tareas indicadas y devuelve cuántas se eliminaron', () => {
+  const store = createTaskStore();
+  store.add({ title: 'A' });
+  store.add({ title: 'B', status: 'doing' });
+  store.add({ title: 'C' });
+  assert.deepStrictEqual(store.removeMany([3, 1]), { ok: true, removed: 2 });
+  assert.deepStrictEqual(titles(store.list()), ['B']);
+});
+
+test('removeMany ignora ids inexistentes y con lista vacía no cambia nada', () => {
+  const store = createTaskStore();
+  store.add({ title: 'A' });
+  assert.deepStrictEqual(store.removeMany([99]), { ok: true, removed: 0 });
+  assert.deepStrictEqual(store.removeMany([]), { ok: true, removed: 0 });
+  assert.deepStrictEqual(titles(store.list()), ['A']);
+});

@@ -146,3 +146,13 @@ test('GET / incluye la selección múltiple y la barra de acciones en lote (US-0
   assert.match(html, /id="batch-clear"[^>]*>Deseleccionar todo</);
   assert.match(html, /Usa las casillas para seleccionar varias tareas\./);
 });
+
+test('GET / incluye la eliminación en lote con confirmación (US-04-5)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /id="batch-delete"[^>]*>[\s\S]*?Eliminar\s*<\/button>/);
+  assert.match(html, /<dialog[^>]*id="batch-delete-dialog"/);
+  assert.match(html, /<h2 id="batch-delete-title">¿Eliminar 0 tareas\?<\/h2>/);
+  assert.match(html, /Se eliminarán de forma permanente las tareas seleccionadas\. Esta acción no se puede deshacer\./);
+  assert.match(html, /id="batch-delete-cancel"[^>]*>Cancelar</);
+  assert.match(html, /id="batch-delete-confirm"[^>]*>Confirmar</);
+});

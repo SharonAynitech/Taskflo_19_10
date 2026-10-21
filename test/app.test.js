@@ -95,3 +95,12 @@ test('GET / explica cómo arrastrar tarjetas entre columnas (US-03-2)', async ()
   assert.match(html, /<\/svg>\s*Arrastra para mover\s*<\/span>/);
   assert.match(html, /id="board-status"[^>]*aria-live="polite"/);
 });
+
+test('GET / incluye el modal de confirmación para eliminar (US-03-3)', async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<dialog[^>]*id="delete-dialog"/);
+  assert.match(html, /<h2 id="delete-dialog-title">Eliminar tarea<\/h2>/);
+  assert.match(html, /id="delete-confirm"[^>]*>Eliminar</);
+  assert.match(html, /id="delete-cancel"[^>]*>Cancelar</);
+  assert.match(html, /Cada tarjeta tiene acciones para editar o eliminar\. La eliminación pide confirmación explícita antes de ejecutarse\./);
+});

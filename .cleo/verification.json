@@ -188,6 +188,61 @@
           ]
         }
       ]
+    },
+    "US-03-3": {
+      "criteria_digest": "548c5670843ba2429673bc49df55ca944794166e7fa7818b730199b1959f6940",
+      "cases": [
+        {
+          "criterion_index": 0,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Preparar informe" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "[data-column=todo] [data-testid=task-edit]" },
+            { "action": "visible", "selector": "[data-testid=task-form]" },
+            { "action": "text", "selector": "#task-dialog-title", "value": "Editar tarea" },
+            { "action": "value", "selector": "#task-form input[name=title]", "value": "Preparar informe" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Preparar informe final" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "text", "selector": "[data-column=todo] [data-testid=task-card] .task-title", "value": "Preparar informe final" }
+          ]
+        },
+        {
+          "criterion_index": 1,
+          "steps": [
+            { "action": "goto", "path": "/" },
+            { "action": "fill", "selector": "#login-form input[name=email]", "value": "demo@taskflow.test" },
+            { "action": "fill", "selector": "#login-form input[name=password]", "value": "Demo1234" },
+            { "action": "click", "selector": "#login-form button[type=submit]" },
+            { "action": "visible", "selector": "[data-testid=board]" },
+            { "action": "click", "selector": "#new-task" },
+            { "action": "fill", "selector": "#task-form input[name=title]", "value": "Pagar luz" },
+            { "action": "click", "selector": "#task-form button[type=submit]" },
+            { "action": "hidden", "selector": "[data-testid=task-form]" },
+            { "action": "click", "selector": "[data-column=todo] [data-testid=task-delete]" },
+            { "action": "visible", "selector": "[data-testid=delete-dialog]" },
+            { "action": "text", "selector": "[data-testid=delete-dialog]", "value": "Pagar luz" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "click", "selector": "#delete-cancel" },
+            { "action": "hidden", "selector": "[data-testid=delete-dialog]" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 1 },
+            { "action": "click", "selector": "[data-column=todo] [data-testid=task-delete]" },
+            { "action": "visible", "selector": "[data-testid=delete-dialog]" },
+            { "action": "click", "selector": "#delete-confirm" },
+            { "action": "hidden", "selector": "[data-testid=delete-dialog]" },
+            { "action": "count", "selector": "[data-testid=task-card]", "value": 0 },
+            { "action": "text", "selector": "[data-count=todo]", "value": "0" }
+          ]
+        }
+      ]
     }
   }
 }

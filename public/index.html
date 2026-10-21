@@ -127,6 +127,8 @@
     .btn-primary:hover { background: var(--color-primary-hover); }
     .btn-secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--border-color); }
     .btn-secondary:hover { background: var(--color-surface-2); }
+    .btn-danger { background: #DC2626; color: var(--color-primary-fg); }
+    .btn-danger:hover { background: #B91C1C; }
 
     .demo-box {
       margin-top: 24px; padding: 12px 16px;
@@ -257,7 +259,19 @@
       cursor: pointer;
     }
     .move-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
-    .task-title { margin: 0 0 8px; font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--color-text); }
+    .task-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .task-title { flex: 1; min-width: 0; margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--color-text); }
+    /* Acciones visibles al pasar el cursor o al llegar con el teclado; siempre visibles en pantallas táctiles */
+    .card-actions { display: flex; gap: 2px; margin: -4px -4px 0 0; opacity: 0; transition: opacity var(--transition-fast); }
+    .task-card:hover .card-actions, .task-card:focus-within .card-actions { opacity: 1; }
+    @media (hover: none) { .card-actions { opacity: 1; } }
+    .icon-btn {
+      display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0;
+      border: 0; border-radius: 6px; background: transparent; color: var(--color-text-sub);
+      cursor: pointer; transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+    .icon-btn:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .icon-btn.danger:hover { background: var(--color-error-bg); color: var(--color-error-text); }
     .task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--color-text-sub); }
     .badge { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
     .badge-alta { background: #FEE2E2; color: #991B1B; }
@@ -440,7 +454,8 @@
       <div class="board-head">
         <div>
           <h1 id="board-title" tabindex="-1">Mi tablero</h1>
-          <p>Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.</p>
+          <p>Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.
+            Cada tarjeta tiene acciones para editar o eliminar. La eliminación pide confirmación explícita antes de ejecutarse.</p>
         </div>
         <span class="hint">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/></svg>
@@ -470,7 +485,7 @@
   <dialog class="modal" id="task-dialog" data-testid="task-dialog" aria-labelledby="task-dialog-title">
     <form id="task-form" data-testid="task-form" class="modal-body" novalidate>
       <h2 id="task-dialog-title">Nueva tarea</h2>
-      <p class="subtitle">Crea una tarea para tu tablero.</p>
+      <p class="subtitle" id="task-dialog-subtitle">Crea una tarea para tu tablero.</p>
 
       <div class="field">
         <label for="task-title">Título <span class="req" aria-hidden="true">*</span></label>
@@ -505,6 +520,18 @@
         <button class="btn btn-primary" type="submit">Guardar tarea</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Confirmación de eliminación -->
+  <dialog class="modal" id="delete-dialog" data-testid="delete-dialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-text">
+    <div class="modal-body">
+      <h2 id="delete-dialog-title">Eliminar tarea</h2>
+      <p class="subtitle" id="delete-dialog-text">Se eliminará «<strong id="delete-task-title"></strong>» de forma permanente. Esta acción no se puede deshacer.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="delete-cancel">Cancelar</button>
+        <button class="btn btn-danger" type="button" id="delete-confirm">Eliminar</button>
+      </div>
+    </div>
   </dialog>
 
   <script src="/js/auth.js"></script>
@@ -565,7 +592,9 @@
       var highlightId = null;  // última tarea creada o movida: se resalta su borde
       var dragId = null;       // tarea que se está arrastrando
       var ICON_EMPTY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
-      var ICON_DUE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
+      var ICON_EDIT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+      var ICON_DELETE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+      var ICON_DUE ='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>';
 
       function currentStore() {
         var user = auth.currentUser();
@@ -604,6 +633,18 @@
         }
       }
 
+      function iconButton(testId, label, icon, extraClass, onClick) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'icon-btn' + extraClass;
+        btn.setAttribute('data-testid', testId);
+        btn.setAttribute('aria-label', label);
+        btn.title = label;
+        btn.innerHTML = icon;
+        btn.addEventListener('click', onClick);
+        return btn;
+      }
+
       function renderCard(task) {
         var li = document.createElement('li');
         li.className = 'task-card' + (task.id === highlightId ? ' is-new' : '');
@@ -623,10 +664,18 @@
           clearDropTargets();
         });
 
+        var head = document.createElement('div');
+        head.className = 'task-head';
         var title = document.createElement('p');
         title.className = 'task-title';
         title.textContent = task.title;
-        li.appendChild(title);
+        head.appendChild(title);
+        var actions = document.createElement('div');
+        actions.className = 'card-actions';
+        actions.appendChild(iconButton('task-edit', 'Editar «' + task.title + '»', ICON_EDIT, '', function () { openTaskDialog(task); }));
+        actions.appendChild(iconButton('task-delete', 'Eliminar «' + task.title + '»', ICON_DELETE, ' danger', function () { openDeleteDialog(task); }));
+        head.appendChild(actions);
+        li.appendChild(head);
 
         var meta = document.createElement('div');
         meta.className = 'task-meta';
@@ -713,19 +762,68 @@
         taskTitle.setAttribute('aria-invalid', message ? 'true' : 'false');
       }
 
-      function openTaskDialog() {
+      var editingId = null;  // null: el modal crea una tarea; si no, edita la tarea con ese id
+
+      // Sin tarea abre el modal para crear; con tarea lo abre con sus datos para editarla.
+      function openTaskDialog(task) {
         taskForm.reset();
         setTitleError('');
+        editingId = task ? task.id : null;
+        byId('task-dialog-title').textContent = task ? 'Editar tarea' : 'Nueva tarea';
+        byId('task-dialog-subtitle').textContent = task ? 'Actualiza los datos de la tarea.' : 'Crea una tarea para tu tablero.';
+        if (task) {
+          taskTitle.value = task.title;
+          byId('task-priority').value = task.priority;
+          byId('task-due').value = task.due;
+          byId('task-status').value = task.status;
+        }
         taskDialog.showModal();
         taskTitle.focus();
       }
 
-      byId('new-task').addEventListener('click', openTaskDialog);
+      // Si el foco quedó perdido al cerrar un modal (en body o dentro del modal), lo lleva a 'fallback'.
+      function restoreFocus(dialog, fallback) {
+        var active = document.activeElement;
+        if (!active || active === document.body || dialog.contains(active)) fallback().focus();
+      }
+
+      function cardControl(id, testId) {
+        return id === null ? null : document.querySelector('[data-task-id="' + id + '"] [data-testid="' + testId + '"]');
+      }
+
+      byId('new-task').addEventListener('click', function () { openTaskDialog(null); });
       byId('task-cancel').addEventListener('click', function () { taskDialog.close(); });
       // 'close' llega de forma asíncrona: solo recupera el foco si quedó perdido, sin quitárselo a otro control.
       taskDialog.addEventListener('close', function () {
-        var active = document.activeElement;
-        if (!active || active === document.body || taskDialog.contains(active)) byId('new-task').focus();
+        restoreFocus(taskDialog, function () { return cardControl(editingId, 'task-edit') || byId('new-task'); });
+      });
+
+      // ---------- Confirmación de eliminación ----------
+      var deleteDialog = byId('delete-dialog');
+      var deletingId = null;
+
+      function openDeleteDialog(task) {
+        deletingId = task.id;
+        byId('delete-task-title').textContent = task.title;
+        deleteDialog.showModal();
+        byId('delete-cancel').focus();
+      }
+
+      byId('delete-cancel').addEventListener('click', function () { deleteDialog.close(); });
+      byId('delete-confirm').addEventListener('click', function () {
+        var result = currentStore().remove(deletingId);
+        deletingId = null;
+        deleteDialog.close();
+        if (!result.ok) return;
+        renderBoard();
+        byId('board-title').focus();
+        byId('board-status').textContent = 'Tarea eliminada';
+      });
+      // Al cancelar vuelve al botón de eliminar de la tarjeta; tras eliminar, al título del tablero.
+      deleteDialog.addEventListener('close', function () {
+        var id = deletingId;
+        deletingId = null;
+        restoreFocus(deleteDialog, function () { return cardControl(id, 'task-delete') || byId('board-title'); });
       });
 
       taskTitle.addEventListener('input', function () {
@@ -734,12 +832,13 @@
 
       taskForm.addEventListener('submit', function (event) {
         event.preventDefault();
-        var result = currentStore().add({
+        var input = {
           title: taskTitle.value,
           priority: byId('task-priority').value,
           due: byId('task-due').value,
           status: byId('task-status').value,
-        });
+        };
+        var result = editingId === null ? currentStore().add(input) : currentStore().update(editingId, input);
         if (!result.ok) {
           setTitleError(result.error);
           taskTitle.focus();
@@ -748,6 +847,8 @@
         highlightId = result.task.id;
         taskDialog.close();
         renderBoard();
+        (cardControl(editingId, 'task-edit') || byId('new-task')).focus();
+        byId('board-status').textContent = 'Tarea guardada';
       });
 
       function render() {

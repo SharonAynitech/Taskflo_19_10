@@ -58,6 +58,20 @@
       return { ok: true, value: { title: title, priority: priority, status: status, due: due } };
     }
 
+    function indexOf(id) {
+      for (var i = 0; i < tasks.length; i++) if (tasks[i].id === id) return i;
+      return -1;
+    }
+
+    // Al cambiar de estado la tarea pasa al final de la nueva columna; con el mismo estado no se mueve.
+    function setStatus(index, status) {
+      var task = tasks[index];
+      if (task.status === status) return;
+      tasks.splice(index, 1);
+      task.status = status;
+      tasks.push(task);
+    }
+
     return {
       add: function (input) {
         var v = validate(input || {});
@@ -69,16 +83,29 @@
       // Cambia el estado; la tarea pasa al final de la columna de destino. Misma columna: sin cambios.
       move: function (id, status) {
         if (!has(STATUSES, status)) return { ok: false, error: MESSAGES.invalidStatus, field: 'status' };
-        var index = -1;
-        for (var i = 0; i < tasks.length; i++) if (tasks[i].id === id) index = i;
+        var index = indexOf(id);
         if (index === -1) return { ok: false, error: MESSAGES.notFound };
         var task = tasks[index];
-        if (task.status !== status) {
-          tasks.splice(index, 1);
-          task.status = status;
-          tasks.push(task);
-        }
+        setStatus(index, status);
         return { ok: true, task: copy(task) };
+      },
+      // Reemplaza los datos con las mismas reglas que al crear. Si cambia el estado, se comporta como move.
+      update: function (id, input) {
+        var index = indexOf(id);
+        if (index === -1) return { ok: false, error: MESSAGES.notFound };
+        var v = validate(input || {});
+        if (!v.ok) return v;
+        var task = tasks[index];
+        task.title = v.value.title;
+        task.priority = v.value.priority;
+        task.due = v.value.due;
+        setStatus(index, v.value.status);
+        return { ok: true, task: copy(task) };
+      },
+      remove: function (id) {
+        var index = indexOf(id);
+        if (index === -1) return { ok: false, error: MESSAGES.notFound };
+        return { ok: true, task: copy(tasks.splice(index, 1)[0]) };
       },
       list: function () {
         return tasks.map(copy);

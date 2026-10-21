@@ -105,3 +105,44 @@ test('mover a un estado inválido o una tarea inexistente falla sin cambios', ()
   assert.deepStrictEqual(store.move(99, 'doing'), { ok: false, error: MESSAGES.notFound });
   assert.deepStrictEqual(store.list().map((t) => t.status), ['todo']);
 });
+
+// Tests de US-03-3: editar y eliminar tareas.
+test('update cambia título, prioridad, fecha y estado validando igual que al crear', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'Informe', priority: 'media' }).task;
+  const r = store.update(a.id, { title: '  Informe final  ', priority: 'alta', due: '2026-11-02', status: 'todo' });
+  assert.deepStrictEqual(r, { ok: true, task: { id: a.id, title: 'Informe final', priority: 'alta', status: 'todo', due: '2026-11-02' } });
+  assert.deepStrictEqual(store.list(), [r.task]);
+});
+
+test('update sin título falla y no cambia la tarea', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'Informe' }).task;
+  assert.deepStrictEqual(store.update(a.id, { title: '   ' }), { ok: false, error: MESSAGES.titleRequired, field: 'title' });
+  assert.strictEqual(store.list()[0].title, 'Informe');
+});
+
+test('update mantiene la posición si no cambia el estado y la mueve al final si cambia', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'A' }).task;
+  store.add({ title: 'B' });
+  store.add({ title: 'C', status: 'doing' });
+  store.update(a.id, { title: 'A2', status: 'todo' });
+  assert.deepStrictEqual(store.byStatus('todo').map((t) => t.title), ['A2', 'B']);
+  store.update(a.id, { title: 'A3', status: 'doing' });
+  assert.deepStrictEqual(store.byStatus('doing').map((t) => t.title), ['C', 'A3']);
+});
+
+test('update de una tarea inexistente falla', () => {
+  assert.deepStrictEqual(createTaskStore().update(7, { title: 'X' }), { ok: false, error: MESSAGES.notFound });
+});
+
+test('remove elimina solo la tarea indicada', () => {
+  const store = createTaskStore();
+  const a = store.add({ title: 'A' }).task;
+  store.add({ title: 'B' });
+  assert.deepStrictEqual(store.remove(a.id), { ok: true, task: a });
+  assert.deepStrictEqual(store.list().map((t) => t.title), ['B']);
+  assert.deepStrictEqual(store.remove(a.id), { ok: false, error: MESSAGES.notFound });
+  assert.strictEqual(store.list().length, 1);
+});

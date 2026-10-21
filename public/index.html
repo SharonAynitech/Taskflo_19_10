@@ -722,7 +722,11 @@
 
       byId('new-task').addEventListener('click', openTaskDialog);
       byId('task-cancel').addEventListener('click', function () { taskDialog.close(); });
-      taskDialog.addEventListener('close', function () { byId('new-task').focus(); });
+      // 'close' llega de forma asíncrona: solo recupera el foco si quedó perdido, sin quitárselo a otro control.
+      taskDialog.addEventListener('close', function () {
+        var active = document.activeElement;
+        if (!active || active === document.body || taskDialog.contains(active)) byId('new-task').focus();
+      });
 
       taskTitle.addEventListener('input', function () {
         if (taskTitle.value.trim()) setTitleError('');

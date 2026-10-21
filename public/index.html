@@ -279,6 +279,62 @@
     .badge-baja { background: #DCFCE7; color: #166534; }
     .due { display: inline-flex; align-items: center; gap: 4px; }
 
+    /* ---------- Cambio de vista ---------- */
+    .view-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .tabs {
+      display: inline-flex; gap: 4px; padding: 4px;
+      background: var(--color-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+    }
+    .tab {
+      height: 32px; padding: 0 14px;
+      font: inherit; font-size: 14px; font-weight: 600; color: var(--color-text-sub);
+      background: transparent; border: 0; border-radius: 6px; cursor: pointer;
+      transition: background-color var(--transition-fast), color var(--transition-fast);
+    }
+    .tab:hover { color: var(--color-text); background: var(--color-surface-2); }
+    .tab[aria-selected="true"] { background: var(--color-primary); color: var(--color-primary-fg); }
+
+    /* ---------- Tabla ---------- */
+    .table-panel {
+      background: var(--color-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+    }
+    .table-head { padding: 16px 16px 12px; border-bottom: 1px solid var(--border-color); }
+    .table-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
+    .table-head p { margin: 2px 0 0; font-size: 14px; color: var(--color-text-sub); }
+    .table-wrap { overflow-x: auto; }
+    /* En pantallas estrechas la tabla se desplaza dentro de su contenedor en lugar de partir las palabras */
+    .task-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px; overflow-wrap: normal; }
+    .task-table th {
+      padding: 0 12px; height: 40px; text-align: left; white-space: nowrap;
+      font-size: 13px; font-weight: 700; color: var(--color-text-sub);
+      background: var(--color-surface-2); border-bottom: 1px solid var(--border-color);
+    }
+    .task-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+    .task-table tbody tr:last-child td { border-bottom: 0; }
+    .task-table tbody tr:nth-child(even) td { background: var(--color-surface-2); }
+    .task-table tbody tr.is-new td { background: var(--color-primary-soft); }
+    .sort-btn {
+      display: inline-flex; align-items: center; gap: 6px; height: 32px; margin: 0 -8px; padding: 0 8px;
+      font: inherit; font-weight: 700; color: inherit;
+      background: transparent; border: 0; border-radius: 6px; cursor: pointer;
+    }
+    .sort-btn:hover { color: var(--color-text); background: var(--color-surface); }
+    .sort-icon { display: inline-flex; }
+    th[aria-sort="ascending"] .sort-btn, th[aria-sort="descending"] .sort-btn { color: var(--color-primary); }
+    .col-order { width: 64px; color: var(--color-text-sub); }
+    .row-title { font-weight: 600; color: var(--color-text); }
+    .col-actions { width: 88px; }
+    .row-actions { display: flex; gap: 2px; }
+    .status-pill { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .status-todo { background: #F3F4F6; color: #374151; }
+    .status-doing { background: var(--color-primary-soft); color: #4338CA; }
+    .status-done { background: #DCFCE7; color: #166534; }
+    .no-due { color: var(--color-text-sub); }
+    .empty-row td { padding: 0; }
+    .empty-row .empty-col { padding: 40px 16px; }
+
     /* ---------- Modal de tarea ---------- */
     .modal {
       width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
@@ -453,18 +509,47 @@
     <main class="board-main">
       <div class="board-head">
         <div>
-          <h1 id="board-title" tabindex="-1">Mi tablero</h1>
-          <p>Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.
+          <h1 id="board-title" tabindex="-1">Mis tareas</h1>
+          <p id="board-intro">Arrastra una tarjeta a otra columna para actualizar su estado. Suelta fuera de cualquier columna y volverá a su lugar.
             Cada tarjeta tiene acciones para editar o eliminar. La eliminación pide confirmación explícita antes de ejecutarse.</p>
+          <p id="table-intro" hidden>Revisa todas tus tareas en lista y ordena por cualquier columna.</p>
         </div>
-        <span class="hint">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/></svg>
-          Arrastra para mover
-        </span>
+        <div class="view-tools">
+          <span class="hint" id="drag-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l-3 3 3 3M19 9l3 3-3 3M2 12h20"/></svg>
+            Arrastra para mover
+          </span>
+          <div class="tabs" role="tablist" aria-label="Vista de tareas">
+            <button class="tab" type="button" id="view-board-tab" role="tab" aria-selected="true" aria-controls="board-panel" data-view="board">Tablero</button>
+            <button class="tab" type="button" id="view-table-tab" role="tab" aria-selected="false" aria-controls="table-panel" data-view="table" tabindex="-1">Tabla</button>
+          </div>
+        </div>
       </div>
       <p class="sr-only" id="board-status" role="status" aria-live="polite"></p>
 
-      <div class="board" data-testid="board">
+      <section class="table-panel" id="table-panel" role="tabpanel" aria-labelledby="view-table-tab" hidden>
+        <div class="table-head">
+          <h2 id="table-title">Lista de tareas</h2>
+          <p id="table-sort-desc">Ordenadas por creación.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="task-table" data-testid="task-table" aria-labelledby="table-title" aria-describedby="table-sort-desc">
+            <thead>
+              <tr>
+                <th scope="col" class="col-order">Orden</th>
+                <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="title">Título <span class="sort-icon" aria-hidden="true"></span></button></th>
+                <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="priority">Prioridad <span class="sort-icon" aria-hidden="true"></span></button></th>
+                <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="status">Estado <span class="sort-icon" aria-hidden="true"></span></button></th>
+                <th scope="col" aria-sort="none"><button class="sort-btn" type="button" data-sort="due">Fecha límite <span class="sort-icon" aria-hidden="true"></span></button></th>
+                <th scope="col" class="col-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody data-testid="task-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="board" id="board-panel" role="tabpanel" aria-labelledby="view-board-tab" data-testid="board">
         <section class="column" data-column="todo" aria-labelledby="col-todo">
           <div class="column-head"><h2 id="col-todo">Por hacer</h2><span class="count" data-count="todo">0</span></div>
           <ul class="card-list" data-list="todo"></ul>
@@ -748,7 +833,138 @@
           }
           tasks.forEach(function (task) { list.appendChild(renderCard(task)); });
         });
+        renderTable();
       }
+
+      // ---------- Vista de tabla ----------
+      var view = 'board';     // 'board' o 'table'
+      var sortKey = null;     // null: orden de creación
+      var sortDir = 'asc';
+      var SORT_TEXT = {
+        title: { name: 'título', asc: 'de la A a la Z', desc: 'de la Z a la A' },
+        priority: { name: 'prioridad', asc: 'de alta a baja', desc: 'de baja a alta' },
+        status: { name: 'estado', asc: 'de Por hacer a Hecho', desc: 'de Hecho a Por hacer' },
+        due: { name: 'fecha límite', asc: 'de la más próxima a la más lejana', desc: 'de la más lejana a la más próxima' },
+      };
+      var SORT_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+      var SORT_ICONS = {
+        none: SORT_SVG + '<path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>',
+        asc: SORT_SVG + '<path d="M12 19V5M6 11l6-6 6 6"/></svg>',
+        desc: SORT_SVG + '<path d="M12 5v14M6 13l6 6 6-6"/></svg>',
+      };
+      // Controles equivalentes de la tarjeta en la fila de la tabla
+      var ROW_CONTROLS = { 'task-edit': 'row-edit', 'task-delete': 'row-delete' };
+
+      function sortDescription() {
+        if (!sortKey) return 'Ordenadas por creación.';
+        return 'Ordenadas por ' + SORT_TEXT[sortKey].name + ', ' + SORT_TEXT[sortKey][sortDir] + '.';
+      }
+
+      function cell(content, className) {
+        var td = document.createElement('td');
+        if (className) td.className = className;
+        if (typeof content === 'string') td.textContent = content;
+        else if (content) td.appendChild(content);
+        return td;
+      }
+
+      function pill(className, testId, text) {
+        var span = document.createElement('span');
+        span.className = className;
+        span.setAttribute('data-testid', testId);
+        span.textContent = text;
+        return span;
+      }
+
+      function renderRow(task, index) {
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-task-id', String(task.id));
+        tr.setAttribute('data-testid', 'task-row');
+        if (task.id === highlightId) tr.className = 'is-new';
+        tr.appendChild(cell(String(index + 1), 'col-order'));
+        tr.appendChild(cell(pill('row-title', 'row-title', task.title)));
+        tr.appendChild(cell(pill('badge badge-' + task.priority, 'row-priority', priorityLabel(task.priority))));
+        tr.appendChild(cell(pill('status-pill status-' + task.status, 'row-status', statusLabel(task.status))));
+        var due;
+        if (task.due) {
+          due = document.createElement('time');
+          due.dateTime = task.due;
+          due.textContent = Tasks.formatDue(task.due);
+          due.setAttribute('data-testid', 'row-due');
+        } else {
+          due = pill('no-due', 'row-no-due', 'Sin fecha');
+        }
+        tr.appendChild(cell(due));
+        var actions = document.createElement('div');
+        actions.className = 'row-actions';
+        actions.appendChild(iconButton('row-edit', 'Editar «' + task.title + '»', ICON_EDIT, '', function () { openTaskDialog(task); }));
+        actions.appendChild(iconButton('row-delete', 'Eliminar «' + task.title + '»', ICON_DELETE, ' danger', function () { openDeleteDialog(task); }));
+        tr.appendChild(cell(actions));
+        return tr;
+      }
+
+      function renderTable() {
+        var body = document.querySelector('[data-testid="task-table-body"]');
+        var tasks = Tasks.sortTasks(currentStore().list(), sortKey, sortDir);
+        body.textContent = '';
+        byId('table-sort-desc').textContent = sortDescription();
+        Array.prototype.forEach.call(document.querySelectorAll('[data-sort]'), function (btn) {
+          var active = btn.getAttribute('data-sort') === sortKey;
+          btn.parentNode.setAttribute('aria-sort', active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+          btn.querySelector('.sort-icon').innerHTML = active ? SORT_ICONS[sortDir] : SORT_ICONS.none;
+        });
+        if (!tasks.length) {
+          var tr = document.createElement('tr');
+          tr.className = 'empty-row';
+          tr.setAttribute('data-testid', 'table-empty');
+          var td = document.createElement('td');
+          td.colSpan = 6;
+          td.innerHTML = '<div class="empty-col">' + ICON_EMPTY + '<span>Sin tareas que coincidan con los filtros</span></div>';
+          tr.appendChild(td);
+          body.appendChild(tr);
+          return;
+        }
+        tasks.forEach(function (task, index) { body.appendChild(renderRow(task, index)); });
+      }
+
+      // Primer clic en una columna: ascendente; clic de nuevo en la misma: invierte el sentido.
+      Array.prototype.forEach.call(document.querySelectorAll('[data-sort]'), function (btn) {
+        btn.addEventListener('click', function () {
+          var key = btn.getAttribute('data-sort');
+          sortDir = key === sortKey && sortDir === 'asc' ? 'desc' : 'asc';
+          sortKey = key;
+          renderTable();
+          byId('board-status').textContent = sortDescription();
+        });
+      });
+
+      var viewTabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"][data-view]'));
+
+      function setView(next, focusTab) {
+        view = next;
+        viewTabs.forEach(function (tab) {
+          var selected = tab.getAttribute('data-view') === view;
+          tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+          tab.tabIndex = selected ? 0 : -1;
+          if (selected && focusTab) tab.focus();
+        });
+        byId('board-panel').hidden = view !== 'board';
+        byId('table-panel').hidden = view !== 'table';
+        byId('board-intro').hidden = view !== 'board';
+        byId('drag-hint').hidden = view !== 'board';
+        byId('table-intro').hidden = view !== 'table';
+      }
+
+      viewTabs.forEach(function (tab, index) {
+        tab.addEventListener('click', function () { setView(tab.getAttribute('data-view'), false); });
+        // Flechas, Inicio y Fin recorren las pestañas y las activan
+        tab.addEventListener('keydown', function (event) {
+          var next = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: viewTabs.length - 1 }[event.key];
+          if (next === undefined) return;
+          event.preventDefault();
+          setView(viewTabs[(next + viewTabs.length) % viewTabs.length].getAttribute('data-view'), true);
+        });
+      });
 
       // ---------- Modal de tarea ----------
       var taskDialog = byId('task-dialog');
@@ -770,7 +986,7 @@
         setTitleError('');
         editingId = task ? task.id : null;
         byId('task-dialog-title').textContent = task ? 'Editar tarea' : 'Nueva tarea';
-        byId('task-dialog-subtitle').textContent = task ? 'Actualiza los datos de la tarea.' : 'Crea una tarea para tu tablero.';
+        byId('task-dialog-subtitle').textContent = task ? 'Actualiza los datos de la tarea.' : 'Crea una tarea para tu ' + (view === 'table' ? 'lista.' : 'tablero.');
         if (task) {
           taskTitle.value = task.title;
           byId('task-priority').value = task.priority;
@@ -787,8 +1003,12 @@
         if (!active || active === document.body || dialog.contains(active)) fallback().focus();
       }
 
+      // Control de una tarea en la vista activa: botón de la tarjeta en el tablero o de la fila en la tabla.
       function cardControl(id, testId) {
-        return id === null ? null : document.querySelector('[data-task-id="' + id + '"] [data-testid="' + testId + '"]');
+        if (id === null) return null;
+        var panel = byId(view === 'table' ? 'table-panel' : 'board-panel');
+        var control = view === 'table' ? ROW_CONTROLS[testId] : testId;
+        return panel.querySelector('[data-task-id="' + id + '"] [data-testid="' + control + '"]');
       }
 
       byId('new-task').addEventListener('click', function () { openTaskDialog(null); });
@@ -860,6 +1080,9 @@
           byId('user-avatar').textContent = user.charAt(0).toUpperCase();
           byId('session-pill').textContent = entry === 'register' ? 'Cuenta creada' : 'Sesión iniciada';
           highlightId = null;
+          sortKey = null;
+          sortDir = 'asc';
+          setView('board', false);
           byId('board-status').textContent = '';
           renderBoard();
           byId('board-title').focus();

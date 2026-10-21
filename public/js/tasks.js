@@ -42,6 +42,28 @@
     return date.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }).replace(/\./g, '').replace(/ de /g, ' ');
   }
 
+  function rank(list, id) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return i;
+    return list.length;
+  }
+
+  // Devuelve una copia ordenada. Sin 'key' (o en empate) se ordena por creación (id).
+  // Prioridad y estado siguen el orden de PRIORITIES y STATUSES; las tareas sin fecha van siempre al final.
+  function sortTasks(list, key, dir) {
+    var sign = dir === 'desc' ? -1 : 1;
+    function compare(a, b) {
+      if (key === 'title') return a.title.localeCompare(b.title, 'es', { sensitivity: 'base' }) * sign;
+      if (key === 'priority') return (rank(PRIORITIES, a.priority) - rank(PRIORITIES, b.priority)) * sign;
+      if (key === 'status') return (rank(STATUSES, a.status) - rank(STATUSES, b.status)) * sign;
+      if (key === 'due') {
+        if (!a.due || !b.due) return (a.due ? 0 : 1) - (b.due ? 0 : 1);
+        return (a.due < b.due ? -1 : a.due > b.due ? 1 : 0) * sign;
+      }
+      return 0;
+    }
+    return list.slice().sort(function (a, b) { return compare(a, b) || a.id - b.id; });
+  }
+
   function createTaskStore() {
     var tasks = [];
     var nextId = 1;
@@ -116,7 +138,7 @@
     };
   }
 
-  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue };
+  var api = { createTaskStore: createTaskStore, STATUSES: STATUSES, PRIORITIES: PRIORITIES, MESSAGES: MESSAGES, formatDue: formatDue, sortTasks: sortTasks };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.TaskFlowTasks = api;
 })(typeof window !== 'undefined' ? window : this);

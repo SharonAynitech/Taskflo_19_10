@@ -170,6 +170,12 @@
         if (index === -1) return { ok: false, error: MESSAGES.notFound };
         return { ok: true, task: copy(tasks.splice(index, 1)[0]) };
       },
+      // Elimina varias tareas a la vez; los ids inexistentes se ignoran.
+      removeMany: function (ids) {
+        var before = tasks.length;
+        tasks = tasks.filter(function (t) { return ids.indexOf(t.id) === -1; });
+        return { ok: true, removed: before - tasks.length };
+      },
       list: function () {
         return tasks.map(copy);
       },
